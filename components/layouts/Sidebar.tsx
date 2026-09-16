@@ -29,7 +29,7 @@ const navItems: NavItem[] = [
   { name: "Orders", href: "/orders", icon: ShoppingCart },
   { name: "Invoices", href: "/invoices", icon: FileText },
   { name: "Employees", href: "/employees", icon: BadgeCheck },
-  { name: "Settings", href: "/settings", icon: Settings },
+  // { name: "Settings", href: "/settings", icon: Settings },
 ];
 
 export default function Sidebar() {
