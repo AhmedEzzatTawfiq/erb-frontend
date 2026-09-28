@@ -1,5 +1,4 @@
-import React from 'react';
-import UsersPage from '@/pages/users/UsersPage';
+import UsersPage from '@/features/users/UsersPage';
 
 export default function Page() {
   return <UsersPage />;

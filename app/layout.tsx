@@ -1,8 +1,10 @@
+
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import Sidebar from "@/components/layouts/Sidebar";
 import Navbar from "@/components/layouts/Navbar";
+import QueryProvider from "@/providers/QueryProvider";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta",
@@ -31,7 +33,9 @@ export default function RootLayout({
         <div className="flex-1 flex flex-col min-w-0 min-h-screen">
           <Navbar />
           <main className="flex-1 p-6 md:p-8 overflow-y-auto">
-            {children}
+            <QueryProvider>
+              {children}
+            </QueryProvider>
           </main>
         </div>
       </body>

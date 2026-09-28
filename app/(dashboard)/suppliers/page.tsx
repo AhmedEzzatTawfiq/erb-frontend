@@ -1,5 +1,4 @@
-import React from 'react';
-import SuppliersPage from '@/pages/suppliers/SuppliersPage';
+import SuppliersPage from '@/features/suppliers/SuppliersPage';
 
 export default function Page() {
   return <SuppliersPage />;

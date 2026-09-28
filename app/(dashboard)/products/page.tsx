@@ -1,5 +1,4 @@
-import React from 'react';
-import ProductsPage from '@/pages/products/ProductsPage';
+import ProductsPage from '@/features/products/ProductsPage';
 
 export default function Page() {
   return <ProductsPage />;

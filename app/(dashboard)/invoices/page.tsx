@@ -1,5 +1,4 @@
-import React from 'react';
-import InvoicesPage from '@/pages/invoices/InvoicesPage';
+import InvoicesPage from '@/features/invoices/InvoicesPage';
 
 export default function Page() {
   return <InvoicesPage />;

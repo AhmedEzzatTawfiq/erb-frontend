@@ -3,15 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutGrid,
-  Users,
-  Handshake,
-  Package,
-  Truck,
-  ShoppingCart,
-  FileText,
-  BadgeCheck,
-  Settings,
+  LayoutGrid, Users, Handshake,
+  Package, Truck, ShoppingCart,
+  FileText, BadgeCheck, Settings,
 } from "lucide-react";
 
 interface NavItem {
@@ -54,24 +48,19 @@ export default function Sidebar() {
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive =
-            pathname === item.href ||
-            (item.href !== "/" && pathname.startsWith(item.href));
+              pathname === item.href ||
+              (item.href !== "/" && pathname.startsWith(`${item.href}/`));
 
           return (
             <Link
               key={item.name}
               href={item.href}
-              className={`flex items-center gap-3.5 px-4 py-3 rounded-lg text-sm transition-all duration-150 ${
-                isActive
-                  ? "bg-primary-light text-primary font-semibold shadow-2xs"
-                  : "text-text-secondary hover:bg-border-subtle hover:text-text-main font-medium"
-              }`}
-            >
-              <Icon
-                className={`w-5 h-5 shrink-0 ${
-                  isActive ? "text-primary" : "text-text-secondary"
+              className={`flex items-center gap-3.5 px-4 py-3 rounded-lg text-sm transition-all duration-150 ${isActive
+                ? "bg-primary-light text-primary font-semibold shadow-2xs"
+                : "text-text-secondary hover:bg-border-subtle hover:text-text-main font-medium"
                 }`}
-              />
+            >
+              <Icon className={`w-5 h-5 shrink-0 ${isActive ? "text-primary" : "text-text-secondary"}`}/>
               <span>{item.name}</span>
             </Link>
           );

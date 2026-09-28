@@ -1,6 +1,3 @@
-'use client';
-
-import React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface PaginationProps {
@@ -36,21 +33,24 @@ export default function Pagination({
         <button
           onClick={() => onPageChange(Math.max(currentPage - 1, 1))}
           disabled={currentPage === 1}
-          className="w-8 h-8 flex items-center justify-center text-sm bg-white border border-border rounded-lg text-text-secondary hover:bg-slate-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-2xs"
+          className="w-8 h-8 flex items-center justify-center text-sm bg-white border border-border
+           rounded-lg text-text-secondary hover:bg-slate-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-2xs"
         >
           <ChevronLeft className="w-4 h-4" />
         </button>
 
         {/* Page Buttons */}
-        {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+        {Array.from(
+          { length: totalPages },
+          (_, i) => i + 1
+        ).map((pageNum) => (
           <button
             key={pageNum}
             onClick={() => onPageChange(pageNum)}
-            className={`w-8 h-8 flex items-center justify-center text-sm font-semibold rounded-lg transition-all shadow-2xs ${
-              currentPage === pageNum
-                ? 'bg-primary text-white shadow-xs'
-                : 'bg-white border border-border text-text-secondary hover:bg-slate-50'
-            }`}
+            className={`w-8 h-8 flex items-center justify-center text-sm font-semibold rounded-lg transition-all shadow-2xs ${currentPage === pageNum
+              ? 'bg-primary text-white shadow-xs'
+              : 'bg-white border border-border text-text-secondary hover:bg-slate-50'
+              }`}
           >
             {pageNum}
           </button>
@@ -60,7 +60,8 @@ export default function Pagination({
         <button
           onClick={() => onPageChange(Math.min(currentPage + 1, totalPages))}
           disabled={currentPage === totalPages}
-          className="w-8 h-8 flex items-center justify-center text-sm bg-white border border-border rounded-lg text-text-secondary hover:bg-slate-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-2xs"
+          className="w-8 h-8 flex items-center justify-center text-sm bg-white border border-border rounded-lg
+           text-text-secondary hover:bg-slate-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-2xs"
         >
           <ChevronRight className="w-4 h-4" />
         </button>

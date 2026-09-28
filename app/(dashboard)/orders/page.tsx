@@ -1,5 +1,5 @@
-import React from 'react';
-import OrdersPage from '@/pages/orders/OrdersPage';
+
+import OrdersPage from '@/features/orders/OrdersPage';
 
 export default function Page() {
   return <OrdersPage />;

@@ -8,7 +8,7 @@
   --color-primary-dark: #0F3D87;
   --color-brand-title: #0B3F8A;
 
-  /* --------- Neutral & Surface Colors --------- */
+  /* --------- Surface Colors --------- */
   --color-app-bg: #F4F6FA;
   --color-surface: #FFFFFF;
   --color-border: #E2E8F0;
@@ -61,6 +61,7 @@
     padding: 0;
     min-height: 100%;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   button {

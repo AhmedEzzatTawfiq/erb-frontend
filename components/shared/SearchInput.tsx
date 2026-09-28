@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { Search } from 'lucide-react';
 
 interface SearchInputProps {
@@ -24,7 +23,8 @@ export default function SearchInput({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full pl-10 pr-4 py-2.5 text-sm bg-white border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all shadow-2xs placeholder:text-text-muted"
+        className="w-full pl-10 pr-4 py-2.5 text-sm bg-white border border-border rounded-xl focus:outline-none
+         focus:ring-2 focus:ring-primary/20 transition-all shadow-2xs placeholder:text-text-muted"
       />
     </div>
   );

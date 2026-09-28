@@ -1,5 +1,4 @@
-import React from 'react';
-import EmployeesPage from '@/pages/employees/EmployeesPage';
+import EmployeesPage from '@/features/employees/EmployeesPage';
 
 export default function Page() {
   return <EmployeesPage />;
