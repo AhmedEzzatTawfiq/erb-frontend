@@ -1,15 +1,14 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
-import { User } from './types';
-import { INITIAL_USERS } from './mockData';
+import React, { useState } from 'react';
 import UserHeader from './UserHeader';
 import UserFilters from './UserFilters';
 import UserTable from './UserTable';
 import Pagination from '@/components/shared/Pagination';
+import { useUsers } from './hooks/useUsers';
+import { useDeleteUser } from './hooks/useDeleteUser';
 
 export default function UsersPage() {
-  const [users, setUsers] = useState<User[]>(INITIAL_USERS);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('All Roles');
   const [statusFilter, setStatusFilter] = useState('All Statuses');
@@ -24,37 +23,33 @@ export default function UsersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 6;
 
-  // Filter & Sort
-  const filteredUsers = useMemo(() => {
-    return users
-      .filter((usr) => {
-        const matchesSearch =
-          searchTerm === '' ||
-          usr.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          usr.email.toLowerCase().includes(searchTerm.toLowerCase());
+  const {
+    data,
+    isPending,
+    isError,
+    error
+  } = useUsers({
+    page: currentPage,
+    limit: pageSize,
+    search: searchTerm,
+    sortField: sortField,
+    sortOrder: sortOrder,
+  })
 
-        const matchesRole = roleFilter === 'All Roles' || usr.role === roleFilter;
-        const matchesStatus = statusFilter === 'All Statuses' || usr.status === statusFilter;
+  const users = data?.data ?? [];
+  const totalCount = data?.meta?.totalCount ?? data?.meta?.total ?? 0;
+  const totalPages = data?.meta?.totalPages ?? 1;
 
-        return matchesSearch && matchesRole && matchesStatus;
-      })
-      .sort((a, b) => {
-        const valA = a[sortField] as string;
-        const valB = b[sortField] as string;
-        return sortOrder === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
-      });
-  }, [users, searchTerm, roleFilter, statusFilter, sortField, sortOrder]);
 
-  // Paginated List
-  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / pageSize));
-  const paginatedUsers = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return filteredUsers.slice(start, start + pageSize);
-  }, [filteredUsers, currentPage, pageSize]);
 
-  // Selection
-  const handleSelectAll = (checked: boolean) =>
-    setSelectedIds(checked ? paginatedUsers.map((u) => u.id) : []);
+  // Selection Handlers
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(users.map((user) => user.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
 
   const handleSelectOne = (id: string) =>
     setSelectedIds((prev) =>
@@ -62,17 +57,29 @@ export default function UsersPage() {
     );
 
   const isAllSelected =
-    paginatedUsers.length > 0 && paginatedUsers.every((u) => selectedIds.includes(u.id));
+    users.length > 0 &&
+    users.every((user) => selectedIds.includes(user.id));
 
-  const handleDelete = (id: string) => {
-    setUsers((prev) => prev.filter((u) => u.id !== id));
-    setSelectedIds((prev) => prev.filter((item) => item !== id));
-    setActiveDropdown(null);
+  const { mutate: deleteUser } = useDeleteUser();
+
+  const handleDeleteUser = (id: string) => {
+    deleteUser(id, {
+      onSuccess: () => {
+        setSelectedIds((prev) => prev.filter((item) => item !== id));
+        setActiveDropdown(null);
+      },
+    });
   };
 
   const handleDeleteSelected = () => {
-    setUsers((prev) => prev.filter((u) => !selectedIds.includes(u.id)));
-    setSelectedIds([]);
+    selectedIds.forEach((id) => {
+      deleteUser(id, {
+        onSuccess: () => {
+          setSelectedIds((prev) => prev.filter((item) => item !== id));
+          setActiveDropdown(null);
+        },
+      });
+    });
   };
 
   const handleSort = (field: 'name' | 'role' | 'status' | 'created') => {
@@ -106,7 +113,7 @@ export default function UsersPage() {
         />
 
         <UserTable
-          users={paginatedUsers}
+          users={users}
           selectedIds={selectedIds}
           isAllSelected={isAllSelected}
           activeDropdown={activeDropdown}
@@ -116,15 +123,15 @@ export default function UsersPage() {
           onSort={handleSort}
           onViewUser={() => { }}
           onEditUser={() => { }}
-          onDeleteUser={handleDelete}
+          onDeleteUser={handleDeleteUser}
           onDeleteSelected={handleDeleteSelected}
         />
 
         <Pagination
-          currentPage={currentPage}
+          currentPage={data?.meta?.page ?? currentPage}
           totalPages={totalPages}
-          totalFilteredCount={filteredUsers.length}
-          pageSize={pageSize}
+          totalFilteredCount={totalCount}
+          pageSize={data?.meta?.limit ?? pageSize}
           onPageChange={setCurrentPage}
           entityLabel="users"
         />

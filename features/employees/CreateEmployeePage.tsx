@@ -5,18 +5,10 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ChevronRight, ChevronDown, Check, Sparkles } from 'lucide-react';
 
-const DEPARTMENTS = [
-  'Engineering',
-  'Sales',
-  'Finance',
-  'Human Resources',
-  'Marketing',
-  'Operations',
-  'Design',
-  'Legal',
-] as const;
+import { useCreateEmployee } from './hooks/useCreateEmployee';
+import { useDepartments } from '../departments/hooks/useDepartments';
 
-const STATUSES = ['Active', 'On Leave', 'Terminated'] as const;
+
 
 export default function CreateEmployeePage() {
   const router = useRouter();
@@ -27,16 +19,21 @@ export default function CreateEmployeePage() {
     lastName: '',
     email: '',
     phone: '',
-    department: 'Engineering',
+    address: '',
+    departmentId: '',
     position: '',
-    status: 'Active',
-    joinedDate: new Date().toISOString().split('T')[0],
-    employeeId: `EMP-${Math.floor(1000 + Math.random() * 9000)}`,
+    salary: 0,
+    status: 'active',
   });
 
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [successMessage, setSuccessMessage] = useState(false);
+
+  const {
+    mutate: createEmployee,
+    isPending,
+    isError,
+    error,
+  } = useCreateEmployee();
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -51,16 +48,31 @@ export default function CreateEmployeePage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
 
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setSuccessMessage(true);
-      setTimeout(() => {
+    const payload = {
+      name: `${formData.firstName} ${formData.lastName}`,
+      email: formData.email,
+      phone: formData.phone,
+      address: formData.address,
+      departmentId: formData.departmentId,
+      jobTitle: formData.position,
+      hireDate: new Date().toISOString(),
+      salary: Number(formData.salary),
+      status: formData.status
+    };
+
+    createEmployee(payload, {
+      onSuccess: () => {
         router.push('/employees');
-      }, 1000);
-    }, 400);
+      },
+    });
+
   };
+
+  const {
+    data: departments,
+    isLoading: isDepartmentsLoading
+  } = useDepartments();
 
   return (
     <main className="space-y-6 max-w-7xl mx-auto pb-10">
@@ -163,8 +175,9 @@ export default function CreateEmployeePage() {
                   onChange={(e) =>
                     setFormData({ ...formData, firstName: e.target.value })
                   }
-                  placeholder="e.g. Sarah"
-                  className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                  placeholder="First name"
+                  className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm
+                   text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
                 />
               </div>
 
@@ -179,8 +192,9 @@ export default function CreateEmployeePage() {
                   onChange={(e) =>
                     setFormData({ ...formData, lastName: e.target.value })
                   }
-                  placeholder="e.g. Jenkins"
-                  className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                  placeholder="Last name"
+                  className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm
+                   text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
                 />
               </div>
 
@@ -195,8 +209,25 @@ export default function CreateEmployeePage() {
                   onChange={(e) =>
                     setFormData({ ...formData, email: e.target.value })
                   }
-                  placeholder="s.jenkins@company.io"
-                  className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                  placeholder="employee@company.io"
+                  className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm
+                   text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
+                  ADDRESS
+                </label>
+                <input
+                  type="text"
+                  value={formData.address}
+                  onChange={(e) =>
+                    setFormData({ ...formData, address: e.target.value })
+                  }
+                  placeholder="123 Main St"
+                  className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm
+                   text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
                 />
               </div>
 
@@ -211,7 +242,8 @@ export default function CreateEmployeePage() {
                     setFormData({ ...formData, phone: e.target.value })
                   }
                   placeholder="+1 (555) 000-0000"
-                  className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                  className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm
+                   text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
                 />
               </div>
             </div>
@@ -226,20 +258,6 @@ export default function CreateEmployeePage() {
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
-              <div>
-                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
-                  EMPLOYEE ID
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.employeeId}
-                  onChange={(e) =>
-                    setFormData({ ...formData, employeeId: e.target.value })
-                  }
-                  className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
-                />
-              </div>
 
               <div>
                 <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
@@ -247,15 +265,20 @@ export default function CreateEmployeePage() {
                 </label>
                 <div className="relative">
                   <select
-                    value={formData.department}
+                    required
+                    value={formData.departmentId}
                     onChange={(e) =>
-                      setFormData({ ...formData, department: e.target.value })
+                      setFormData({ ...formData, departmentId: e.target.value })
                     }
                     className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all appearance-none pr-10 cursor-pointer"
                   >
-                    {DEPARTMENTS.map((dept) => (
-                      <option key={dept} value={dept}>
-                        {dept}
+
+                    <option value="" disabled hidden>
+                      Select Department
+                    </option>
+                    {departments?.map((department) => (
+                      <option key={department.id} value={department.id}>
+                        {department.name}
                       </option>
                     ))}
                   </select>
@@ -265,7 +288,7 @@ export default function CreateEmployeePage() {
 
               <div>
                 <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
-                  POSITION / TITLE *
+                  JOB TITLE *
                 </label>
                 <input
                   type="text"
@@ -289,32 +312,16 @@ export default function CreateEmployeePage() {
                     onChange={(e) =>
                       setFormData({ ...formData, status: e.target.value })
                     }
-                    className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all appearance-none pr-10 cursor-pointer"
+                    className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900
+                     focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all appearance-none pr-10 cursor-pointer"
                   >
-                    {STATUSES.map((st) => (
-                      <option key={st} value={st}>
-                        {st}
-                      </option>
-                    ))}
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
                   </select>
                   <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
               </div>
 
-              <div>
-                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
-                  DATE JOINED *
-                </label>
-                <input
-                  type="date"
-                  required
-                  value={formData.joinedDate}
-                  onChange={(e) =>
-                    setFormData({ ...formData, joinedDate: e.target.value })
-                  }
-                  className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
-                />
-              </div>
             </div>
           </div>
 
@@ -329,20 +336,22 @@ export default function CreateEmployeePage() {
             </button>
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isPending}
               className="px-5 py-2.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-sm font-medium rounded-lg shadow-xs hover:shadow transition-all cursor-pointer flex items-center gap-2 disabled:opacity-75"
             >
-              {successMessage ? (
-                <>
-                  <Check className="w-4 h-4 text-white" />
-                  <span>Created! Redirecting...</span>
-                </>
-              ) : isSubmitting ? (
+              {isPending ? (
                 <span>Creating...</span>
               ) : (
                 <span>Create Employee</span>
               )}
             </button>
+            {isError && (
+              <p className="text-sm text-red-600">
+                {error instanceof Error
+                  ? error.message
+                  : 'Failed to create employee'}
+              </p>
+            )}
           </div>
         </form>
       </div>

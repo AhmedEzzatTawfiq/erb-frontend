@@ -4,30 +4,37 @@ import React, { useState, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ChevronRight, ChevronDown, Sparkles, Check } from 'lucide-react';
+import { useCreateUser } from './hooks/useCreateUser';
 
 export default function CreateUserPage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [avatar, setAvatar] = useState<string | null>();
 
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     email: '',
     password: '',
-    role: 'Standard User',
-    status: 'Active',
+    role: '',
+    status: '',
   });
 
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [successMessage, setSuccessMessage] = useState(false);
+  const {
+    mutate: createUser,
+    isPending,
+    isError,
+    error,
+  } = useCreateUser();
+
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setAvatarPreview(reader.result as string);
+        setAvatar(reader.result as string);
       };
       reader.readAsDataURL(file);
     }
@@ -39,16 +46,21 @@ export default function CreateUserPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
 
-    // Simulate creation delay & success redirect
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setSuccessMessage(true);
-      setTimeout(() => {
+    const payload = {
+      name: `${formData.firstName} ${formData.lastName}`,
+      email: formData.email,
+      password: formData.password,
+      role: formData.role,
+      status: formData.status,
+      avatar: avatar ?? undefined,
+    };
+
+    createUser(payload, {
+      onSuccess: () => {
         router.push('/users');
-      }, 1000);
-    }, 400);
+      },
+    });
   };
 
   return (
@@ -79,9 +91,9 @@ export default function CreateUserPage() {
             <div className="flex items-center gap-5">
               <div className="w-20 h-20 rounded-xl bg-[#F0F4FF] border border-indigo-100/80 flex items-center 
               justify-center shrink-0 overflow-hidden relative group shadow-2xs">
-                {avatarPreview ? (
+                {avatar ? (
                   <img
-                    src={avatarPreview}
+                    src={avatar}
                     alt="Preview"
                     className="w-full h-full object-cover"
                   />
@@ -149,7 +161,7 @@ export default function CreateUserPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, firstName: e.target.value })
                   }
-                  placeholder="Enter first name"
+                  placeholder="First name"
                   className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm
                    text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
                 />
@@ -166,7 +178,7 @@ export default function CreateUserPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, lastName: e.target.value })
                   }
-                  placeholder="Enter last name"
+                  placeholder="Last name"
                   className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm
                    text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
                 />
@@ -220,11 +232,12 @@ export default function CreateUserPage() {
                     className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900
                      focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all appearance-none pr-10 cursor-pointer"
                   >
-                    <option value="Standard User">Standard User</option>
-                    <option value="Admin">Admin</option>
-                    <option value="Manager">Manager</option>
-                    <option value="Editor">Editor</option>
-                    <option value="Viewer">Viewer</option>
+                    <option value="" disabled hidden>
+                      Select Role
+                    </option>
+                    <option value="employee">Employee</option>
+                    <option value="admin">Admin</option>
+                    <option value="manager">Manager</option>
                   </select>
                   <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
@@ -243,9 +256,8 @@ export default function CreateUserPage() {
                     className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900
                      focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all appearance-none pr-10 cursor-pointer"
                   >
-                    <option value="Active">Active</option>
-                    <option value="Inactive">Inactive</option>
-                    <option value="Suspended">Suspended</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
                   </select>
                   <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
@@ -264,19 +276,21 @@ export default function CreateUserPage() {
             </button>
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isPending}
               className="px-5 py-2.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-sm font-medium
                rounded-lg shadow-xs hover:shadow transition-all cursor-pointer flex items-center gap-2 disabled:opacity-75"
             >
-              {successMessage ? (
-                <>
-                  <Check className="w-4 h-4 text-white" /> 
-                  <span>Created! Redirecting...</span>
-                </>
-              ) : isSubmitting ? (
+              {isPending ? (
                 <span>Creating...</span>
               ) : (
                 <span>Create User</span>
+              )}
+              {isError && (
+                <p className="text-sm text-red-600">
+                  {error instanceof Error
+                    ? error.message
+                    : 'Failed to create user'}
+                </p>
               )}
             </button>
           </div>

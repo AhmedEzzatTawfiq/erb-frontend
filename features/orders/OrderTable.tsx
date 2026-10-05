@@ -2,49 +2,37 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Order, OrderStatus, PaymentStatus } from './types';
-import { ArrowUpDown, ShoppingCart, MoreVertical, Eye, Pencil, Trash2 } from 'lucide-react';
+import { OrderApi, OrderStatus } from './types';
+import { ArrowUpDown, ShoppingCart, MoreVertical, Trash2 } from 'lucide-react';
 import ActionDropDown from '@/components/shared/ActionDropDown';
 
 interface OrderTableProps {
-  orders: Order[];
+  orders: OrderApi[];
   selectedIds: string[];
   isAllSelected: boolean;
   activeDropdown: string | null;
   setActiveDropdown: (id: string | null) => void;
   onSelectAll: (checked: boolean) => void;
   onSelectOne: (id: string) => void;
-  onSort: (field: 'orderNumber' | 'date' | 'total' | 'items') => void;
-  onViewOrder: (order: Order) => void;
-  onEditOrder: (order: Order) => void;
+  onSort: (field: string) => void;
+  onViewOrder: (order: OrderApi) => void;
+  onEditOrder: (order: OrderApi) => void;
   onDeleteOrder: (id: string) => void;
   onDeleteSelected: () => void;
   formatCurrency: (val: number) => string;
 }
 
 const ORDER_STATUS_STYLES: Record<OrderStatus, string> = {
-  Processing: 'bg-amber-50 text-amber-700 border border-amber-200',
-  Shipped: 'bg-blue-50 text-blue-700 border border-blue-200',
-  Delivered: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
-  Pending: 'bg-slate-100 text-slate-600 border border-slate-200',
-  Cancelled: 'bg-red-50 text-red-600 border border-red-200',
+  confirmed: 'bg-amber-50 text-amber-700 border border-amber-200',
+  shipped: 'bg-blue-50 text-blue-700 border border-blue-200',
+  delivered: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+  pending: 'bg-slate-100 text-slate-600 border border-slate-200',
 };
 
-const PAYMENT_STATUS_STYLES: Record<PaymentStatus, string> = {
-  Paid: 'bg-emerald-50 text-emerald-700',
-  Pending: 'bg-amber-50 text-amber-600',
-  Failed: 'bg-red-50 text-red-600',
-  Refunded: 'bg-slate-100 text-slate-600',
-};
+const FALLBACK_STATUS_STYLE = 'bg-red-50 text-red-600 border border-red-200';
 
-const OrderStatusBadge: React.FC<{ status: OrderStatus }> = ({ status }) => (
-  <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold ${ORDER_STATUS_STYLES[status]}`}>
-    {status}
-  </span>
-);
-
-const PaymentStatusBadge: React.FC<{ status: PaymentStatus }> = ({ status }) => (
-  <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold ${PAYMENT_STATUS_STYLES[status]}`}>
+const OrderStatusBadge: React.FC<{ status: string }> = ({ status }) => (
+  <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold capitalize ${ORDER_STATUS_STYLES[status as OrderStatus] ?? FALLBACK_STATUS_STYLE}`}>
     {status}
   </span>
 );
@@ -98,7 +86,7 @@ export default function OrderTable({
                 />
               </th>
               <th
-                onClick={() => onSort('orderNumber')}
+                onClick={() => onSort('id')}
                 className="py-3.5 px-5 text-xs font-semibold text-text-secondary uppercase tracking-wider cursor-pointer select-none hover:text-text-main transition-colors"
               >
                 <div className="flex items-center gap-1.5">
@@ -107,7 +95,7 @@ export default function OrderTable({
                 </div>
               </th>
               <th
-                onClick={() => onSort('date')}
+                onClick={() => onSort('orderDate')}
                 className="py-3.5 px-5 text-xs font-semibold text-text-secondary uppercase tracking-wider cursor-pointer select-none hover:text-text-main transition-colors"
               >
                 <div className="flex items-center gap-1.5">
@@ -119,26 +107,15 @@ export default function OrderTable({
                 CUSTOMER
               </th>
               <th
-                onClick={() => onSort('items')}
-                className="py-3.5 px-5 text-xs font-semibold text-text-secondary uppercase tracking-wider
-                 text-center cursor-pointer select-none hover:text-text-main transition-colors"
-              >
-                <div className="flex items-center justify-center gap-1.5">
-                  <span>ITEMS</span>
-                  <ArrowUpDown className="w-3 h-3 text-text-muted" />
-                </div>
-              </th>
-              <th
-                onClick={() => onSort('total')}
-                className="py-3.5 px-5 text-xs font-semibold text-text-secondary uppercase tracking-wider 
-                text-right cursor-pointer select-none hover:text-text-main transition-colors"
+                onClick={() => onSort('totalAmount')}
+                className="py-3.5 px-5 text-xs font-semibold text-text-secondary uppercase tracking-wider text-right cursor-pointer select-none hover:text-text-main transition-colors"
               >
                 <div className="flex items-center justify-end gap-1.5">
                   <span>TOTAL</span>
                   <ArrowUpDown className="w-3 h-3 text-text-muted" />
                 </div>
               </th>
-              <th className="py-3.5 px-5 text-xs font-semibold text-text-secondary uppercase tracking-wider text-center">
+              <th className="py-3.5 px-5 text-xs font-semibold text-text-secondary uppercase tracking-wider">
                 PAYMENT
               </th>
               <th className="py-3.5 px-5 text-xs font-semibold text-text-secondary uppercase tracking-wider text-center">
@@ -152,7 +129,7 @@ export default function OrderTable({
           <tbody className="divide-y divide-border">
             {orders.length === 0 ? (
               <tr>
-                <td colSpan={9} className="py-12 text-center text-text-secondary">
+                <td colSpan={8} className="py-12 text-center text-text-secondary">
                   <ShoppingCart className="w-10 h-10 mx-auto text-[#CBD5E1] mb-2" />
                   <p className="font-semibold text-base">No orders found</p>
                   <p className="text-xs text-text-muted mt-0.5">
@@ -163,11 +140,16 @@ export default function OrderTable({
             ) : (
               orders.map((order) => {
                 const isSelected = selectedIds.includes(order.id);
+                const shortId = order.id.slice(0, 8).toUpperCase();
+                const customerName = order.customer?.companyName ?? '—';
+                const customerInitials = order.customer?.companyName
+                  ? order.customer.companyName.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()
+                  : '?';
+
                 return (
                   <tr
                     key={order.id}
-                    className={`hover:bg-slate-50/70 transition-colors ${isSelected ? 'bg-blue-50/30' : ''
-                      }`}
+                    className={`hover:bg-slate-50/70 transition-colors ${isSelected ? 'bg-blue-50/30' : ''}`}
                   >
                     {/* Checkbox */}
                     <td className="py-4 px-5 text-center">
@@ -184,39 +166,37 @@ export default function OrderTable({
                         href={`/orders/${order.id}`}
                         className="text-sm font-bold text-primary hover:underline cursor-pointer block"
                       >
-                        {order.orderNumber}
+                        #{shortId}
                       </Link>
                     </td>
 
                     <td className="py-4 px-5 text-sm text-text-secondary font-medium whitespace-nowrap">
-                      {order.date}
+                      {order.orderDate ? new Date(order.orderDate).toLocaleDateString() : '—'}
                     </td>
 
                     <td className="py-4 px-5">
                       <div className="flex items-center gap-2.5">
-                        <div
-                          className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${order.customer.initialsBg}`}
-                        >
-                          {order.customer.initials}
+                        <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 bg-blue-100 text-blue-700">
+                          {customerInitials}
                         </div>
                         <span className="text-sm font-medium text-text-main whitespace-nowrap">
-                          {order.customer.name}
+                          {customerName}
                         </span>
                       </div>
                     </td>
 
-                    <td className="py-4 px-5 text-center text-sm font-medium text-text-main">
-                      {order.items}
-                    </td>
                     <td className="py-4 px-5 text-right text-sm font-bold text-text-main">
-                      {formatCurrency(order.total)}
+                      {formatCurrency(Number(order.totalAmount))}
                     </td>
-                    <td className="py-4 px-5 text-center">
-                      <PaymentStatusBadge status={order.paymentStatus} />
+
+                    <td className="py-4 px-5 text-sm font-medium text-text-secondary">
+                      {order.paymentMethod ?? '—'}
                     </td>
+
                     <td className="py-4 px-5 text-center">
                       <OrderStatusBadge status={order.status} />
                     </td>
+
                     <td className="py-4 px-5 text-right relative">
                       <button
                         type="button"
@@ -231,7 +211,6 @@ export default function OrderTable({
                         <MoreVertical className="w-4 h-4" />
                       </button>
 
-                      {/* Dropdown Menu */}
                       {activeDropdown === order.id && (
                         <>
                           <div
@@ -239,10 +218,10 @@ export default function OrderTable({
                             onClick={() => setActiveDropdown(null)}
                           />
                           <ActionDropDown
-                            href={`/customers/${order.id}`}
+                            href={`/orders/${order.id}`}
                             id={order.id}
-                            editLabel='Edit Employee'
-                            deleteLabel='Delete Employee'
+                            editLabel="Edit Order"
+                            deleteLabel="Delete Order"
                             setActiveDropdown={setActiveDropdown}
                             onDeleteUser={onDeleteOrder}
                           />
@@ -258,4 +237,4 @@ export default function OrderTable({
       </div>
     </div>
   );
-};
+}

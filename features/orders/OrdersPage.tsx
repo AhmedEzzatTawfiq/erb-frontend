@@ -1,75 +1,56 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
-import { Order } from './types';
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { formatCurrency } from '@/lib/utils';
-import { INITIAL_ORDERS } from './mockData';
 import OrderHeader from './OrderHeader';
 import OrderFilters from './OrderFilters';
 import OrderTable from './OrderTable';
 import Pagination from '@/components/shared/Pagination';
+import { useOrders } from './hooks/useOrders';
+import { useDeleteOrder } from './hooks/useDeleteOrder';
+import { OrderStatus } from './types';
 
 export default function OrdersPage() {
-  const [orders, setOrders] = useState<Order[]>(INITIAL_ORDERS);
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All Statuses');
   const [paymentFilter, setPaymentFilter] = useState('Payment Status');
   const [dateRange, setDateRange] = useState('Last 30 Days');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
-
-  // Sorting
-  const [sortField, setSortField] = useState<'orderNumber' | 'date' | 'total' | 'items'>('date');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [showMoreFilters, setShowMoreFilters] = useState(false);
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
-  const [showMoreFilters, setShowMoreFilters] = useState(false);
 
-  // Filter & Sort
-  const filteredOrders = useMemo(() => {
-    return orders
-      .filter((ord) => {
-        const matchesSearch =
-          searchTerm === '' ||
-          ord.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          ord.customer.name.toLowerCase().includes(searchTerm.toLowerCase());
+  const { data, isLoading, isError } = useOrders({
+    status: statusFilter !== 'All Statuses' ? (statusFilter.toLowerCase() as OrderStatus) : undefined,
+    search: searchTerm,
+    page: currentPage,
+    limit: pageSize,
+  });
 
-        const matchesStatus =
-          statusFilter === 'All Statuses' || ord.status === statusFilter;
+  const orders = data?.data ?? [];
+  const totalCount = data?.meta?.totalCount ?? data?.meta?.total ?? 0;
+  const totalPages = data?.meta?.totalPages ?? 1;
 
-        const matchesPayment =
-          paymentFilter === 'Payment Status' || ord.paymentStatus === paymentFilter;
-
-        return matchesSearch && matchesStatus && matchesPayment;
-      })
-      .sort((a, b) => {
-        const valA = a[sortField];
-        const valB = b[sortField];
-
-        if (typeof valA === 'string' && typeof valB === 'string') {
-          return sortOrder === 'asc'
-            ? valA.localeCompare(valB)
-            : valB.localeCompare(valA);
-        }
-        return sortOrder === 'asc'
-          ? (valA as number) - (valB as number)
-          : (valB as number) - (valA as number);
-      });
-  }, [orders, searchTerm, statusFilter, paymentFilter, sortField, sortOrder]);
-
-  // Paginated List
-  const totalPages = Math.max(1, Math.ceil(filteredOrders.length / pageSize));
-  const paginatedOrders = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return filteredOrders.slice(start, start + pageSize);
-  }, [filteredOrders, currentPage, pageSize]);
+  // Filter orders if search term provided
+  const filteredOrders = orders.filter((ord) => {
+    if (!searchTerm) return true;
+    const term = searchTerm.toLowerCase();
+    return (
+      ord.id.toLowerCase().includes(term) ||
+      (ord.customer?.companyName ?? '').toLowerCase().includes(term) ||
+      (ord.customer?.contactName ?? '').toLowerCase().includes(term)
+    );
+  });
 
   // Selection Handlers
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedIds(paginatedOrders.map((o) => o.id));
+      setSelectedIds(filteredOrders.map((o) => o.id));
     } else {
       setSelectedIds([]);
     }
@@ -82,28 +63,55 @@ export default function OrdersPage() {
   };
 
   const isAllSelected =
-    paginatedOrders.length > 0 &&
-    paginatedOrders.every((o) => selectedIds.includes(o.id));
+    filteredOrders.length > 0 &&
+    filteredOrders.every((o) => selectedIds.includes(o.id));
+
+  const { mutate: deleteOrder } = useDeleteOrder();
 
   const handleDeleteOrder = (id: string) => {
-    setOrders((prev) => prev.filter((o) => o.id !== id));
-    setSelectedIds((prev) => prev.filter((item) => item !== id));
-    setActiveDropdown(null);
+    deleteOrder(id, {
+      onSuccess: () => {
+        setSelectedIds((prev) => prev.filter((item) => item !== id));
+        setActiveDropdown(null);
+      },
+    });
   };
 
   const handleDeleteSelected = () => {
-    setOrders((prev) => prev.filter((o) => !selectedIds.includes(o.id)));
-    setSelectedIds([]);
+    selectedIds.forEach((id) => {
+      deleteOrder(id, {
+        onSuccess: () => {
+          setSelectedIds((prev) => prev.filter((item) => item !== id));
+        },
+      });
+    });
   };
 
-  const handleSort = (field: 'orderNumber' | 'date' | 'total' | 'items') => {
-    if (sortField === field) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortOrder('asc');
-    }
+  const handleSort = () => {
+    
   };
+
+  if (isLoading) {
+    return (
+      <main className="space-y-6 max-w-7xl mx-auto pb-10">
+        <OrderHeader />
+        <div className="flex items-center justify-center py-24 text-slate-400 text-sm">
+          Loading orders…
+        </div>
+      </main>
+    );
+  }
+
+  if (isError) {
+    return (
+      <main className="space-y-6 max-w-7xl mx-auto pb-10">
+        <OrderHeader />
+        <div className="flex items-center justify-center py-24 text-red-500 text-sm">
+          Failed to load orders. Please try again.
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="space-y-6 max-w-7xl mx-auto pb-10">
@@ -131,7 +139,7 @@ export default function OrdersPage() {
 
       <div className="bg-white border border-border rounded-2xl shadow-2xs overflow-hidden">
         <OrderTable
-          orders={paginatedOrders}
+          orders={filteredOrders}
           selectedIds={selectedIds}
           isAllSelected={isAllSelected}
           activeDropdown={activeDropdown}
@@ -139,18 +147,18 @@ export default function OrdersPage() {
           onSelectAll={handleSelectAll}
           onSelectOne={handleSelectOne}
           onSort={handleSort}
-          onViewOrder={() => {}}
-          onEditOrder={() => {}}
+          onViewOrder={(order) => router.push(`/orders/${order.id}`)}
+          onEditOrder={(order) => router.push(`/orders/${order.id}/edit`)}
           onDeleteOrder={handleDeleteOrder}
           onDeleteSelected={handleDeleteSelected}
           formatCurrency={formatCurrency}
         />
 
         <Pagination
-          currentPage={currentPage}
+          currentPage={data?.meta?.page ?? currentPage}
           totalPages={totalPages}
-          totalFilteredCount={filteredOrders.length}
-          pageSize={pageSize}
+          totalFilteredCount={totalCount}
+          pageSize={data?.meta?.limit ?? pageSize}
           onPageChange={setCurrentPage}
           entityLabel="orders"
         />

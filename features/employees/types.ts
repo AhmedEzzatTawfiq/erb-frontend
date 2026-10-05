@@ -1,26 +1,78 @@
-export type EmployeeStatus = 'Active' | 'On Leave' | 'Terminated';
+export type EmployeeStatus = 'active' | 'inactive' | 'Terminated';
 
-export type Department =
-  | 'Engineering'
-  | 'Sales'
-  | 'Finance'
-  | 'Human Resources'
-  | 'Marketing'
-  | 'Operations'
-  | 'Design'
-  | 'Legal';
+export type Department = string;
 
 export interface Employee {
   id: string;
-  employeeId: string;
+  employeeId?: string;
   name: string;
-  department: Department;
-  position: string;
+  department?: Department | { id: string; name: string };
+  departmentId?: string;
+  position?: string;
+  jopTitle?: string;
   email: string;
-  phone: string;
+  phone?: string | null;
+  address?: string | null;
+  salary?: number;
   status: EmployeeStatus;
-  avatar?: string;
+  avatar?: string | null;
   initials?: string;
   initialsBg?: string;
-  joinedDate: string;
+  joinedDate?: string;
+  hireDate?: string | Date;
+  createdAt?: string;
+  updatedAt?: string;
 }
+
+export interface CreateEmployeeInput {
+  name: string;
+  email: string;
+  phone?: string;
+  address?: string;
+  department?: string;
+  departmentId?: string;
+  position?: string;
+  jopTitle?: string;
+  hireDate?: string;
+  joinedDate?: string;
+  salary?: number;
+  status?: EmployeeStatus | string;
+  employeeId?: string;
+  avatar?: string;
+}
+
+export interface GetEmployeesParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  department?: string;
+  departmentId?: string;
+  status?: string;
+  sortField?: string;
+  sortOrder?: 'asc' | 'desc';
+}
+
+export interface UseEmployeesParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  department?: string;
+  departmentId?: string;
+  status?: string;
+  sortField?: string;
+  sortOrder?: 'asc' | 'desc';
+}
+
+export interface PaginationMeta {
+  page: number;
+  limit: number;
+  totalCount?: number;
+  total?: number;
+  totalPages: number;
+}
+
+export interface EmployeesResponse {
+  data: Employee[];
+  meta: PaginationMeta;
+}
+

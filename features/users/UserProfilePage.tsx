@@ -1,13 +1,27 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { ChevronRight, Pencil, MapPin, Phone, BadgeCheck, CheckCircle2, Briefcase, MessageSquare } from 'lucide-react';
+import { useParams } from 'next/navigation';
+import { ChevronRight, Pencil, MapPin, Phone, BadgeCheck, CheckCircle2, Briefcase, MessageSquare, Calendar } from 'lucide-react';
+import { useUser } from './hooks/useUser';
 
 export default function UserProfilePage() {
-  const router = useRouter();
+  const params = useParams();
+  const id = params?.id as string;
+
+  const { data, isLoading, isError } = useUser(id);
+  const user = data ?? null;
+
+  if (isLoading) {
+    return <div className="p-8 text-slate-500 font-medium">Loading user details...</div>;
+  }
+
+  if (isError || !user) {
+    return <div className="p-8 text-red-500 font-medium">User not found.</div>;
+  }
 
   return (
+
     <main className="space-y-6 max-w-7xl mx-auto pb-10">
       {/* Breadcrumb Navigation */}
       <nav className="flex items-center gap-2 text-sm text-slate-500 font-medium">
@@ -18,16 +32,16 @@ export default function UserProfilePage() {
           Users
         </Link>
         <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
-        <span className="text-slate-700 font-semibold">Jane Cooper</span>
+        <span className="text-slate-700 font-semibold">{user.name}</span>
       </nav>
 
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
-          Jane Cooper
+          {user.name}
         </h1>
         <Link
-          href={`/users/edit`}
+          href={`/users/${user.id}/edit`}
           className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-sm font-semibold
            px-4 py-2.5 rounded-lg shadow-2xs transition-colors cursor-pointer flex items-center gap-2 self-start sm:self-auto"
         >
@@ -41,37 +55,43 @@ export default function UserProfilePage() {
         {/* Left */}
         <div className="lg:col-span-1 space-y-6">
           <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-2xs text-center flex flex-col items-center">
-            <div className="w-24 h-24 rounded-full overflow-hidden mb-4 border-2 border-slate-100 shadow-xs relative group">
-              <img
-                src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=240"
-                alt="Jane Cooper"
-                className="w-full h-full object-cover"
-              />
+            <div className="w-24 h-24 rounded-full overflow-hidden mb-4 border-2 border-slate-100 shadow-xs relative group flex items-center justify-center bg-slate-100">
+              {user.avatar ? (
+                <img
+                  src={user.avatar}
+                  alt={user.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-xl font-bold text-blue-700">
+                  {user.initials || user.name.slice(0, 2).toUpperCase()}
+                </span>
+              )}
             </div>
 
-            <h2 className="text-lg font-bold text-slate-900">Jane Cooper</h2>
+            <h2 className="text-lg font-bold text-slate-900">{user.name}</h2>
             <p className="text-xs text-slate-500 font-medium mb-3">
-              jane.cooper@erpcore.com
+              {user.email}
             </p>
 
             <div className="flex items-center gap-2 justify-center mb-5">
               <span className="bg-slate-100 text-slate-700 text-xs font-semibold px-2.5 py-1 rounded-md border border-slate-200">
-                Senior Manager
+                {user.role}
               </span>
               <span className="bg-emerald-100 text-emerald-700 text-xs font-bold px-2.5 py-1 rounded-md flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
-                Active
+                {user.status}
               </span>
             </div>
 
-            <button
-              type="button"
+            <a
+              href={`mailto:${user.email}`}
               className="w-full bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-sm font-medium py-2.5
                rounded-lg shadow-xs hover:shadow transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               <MessageSquare className="w-4 h-4" />
               <span>Message</span>
-            </button>
+            </a>
           </div>
 
           <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-2xs space-y-4">
@@ -81,40 +101,30 @@ export default function UserProfilePage() {
               <div className="flex items-center justify-between py-1 border-b border-slate-100 pb-2.5">
                 <div className="flex items-center gap-2 text-slate-500 font-medium">
                   <Briefcase className="w-4 h-4 text-slate-400 shrink-0" />
-                  <span>Department</span>
+                  <span>Role</span>
                 </div>
                 <span className="font-semibold text-slate-800">
-                  Operations
+                  {user.role}
                 </span>
               </div>
 
               <div className="flex items-center justify-between py-1 border-b border-slate-100 pb-2.5">
                 <div className="flex items-center gap-2 text-slate-500 font-medium">
-                  <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
-                  <span>Location</span>
+                  <Calendar className="w-4 h-4 text-slate-400 shrink-0" />
+                  <span>Created</span>
                 </div>
                 <span className="font-semibold text-slate-800">
-                  New York Office
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between py-1 border-b border-slate-100 pb-2.5">
-                <div className="flex items-center gap-2 text-slate-500 font-medium">
-                  <Phone className="w-4 h-4 text-slate-400 shrink-0" />
-                  <span>Phone</span>
-                </div>
-                <span className="font-semibold text-slate-800">
-                  +1 (555) 123-4567
+                  {user.created ? new Date(user.created).toLocaleDateString() : 'N/A'}
                 </span>
               </div>
 
               <div className="flex items-center justify-between py-1">
                 <div className="flex items-center gap-2 text-slate-500 font-medium">
                   <BadgeCheck className="w-4 h-4 text-slate-400 shrink-0" />
-                  <span>Employee ID</span>
+                  <span>User ID</span>
                 </div>
                 <span className="font-semibold text-slate-800">
-                  EMP-2023-040
+                  {user.id.slice(0, 8)}
                 </span>
               </div>
             </div>
@@ -129,7 +139,7 @@ export default function UserProfilePage() {
                 Joined Date
               </span>
               <span className="text-sm font-bold text-slate-900 mt-1 block">
-                Oct 12, 2021
+                {user.created ? new Date(user.created).toLocaleDateString() : 'N/A'}
               </span>
             </div>
 

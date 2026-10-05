@@ -1,65 +1,50 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
-import { Employee } from './types';
-import { INITIAL_EMPLOYEES } from './mockData';
+import React, { useState } from 'react';
 import EmployeeHeader from './EmployeeHeader';
 import EmployeeFilters from './EmployeeFilters';
 import EmployeeTable from './EmployeeTable';
 import Pagination from '@/components/shared/Pagination';
+import { useEmployees } from './hooks/useEmployees';
+import { useDeleteEmployee } from './hooks/useDeleteEmployee';
 
 export default function EmployeesPage() {
-  const [employees, setEmployees] = useState<Employee[]>(INITIAL_EMPLOYEES);
   const [searchTerm, setSearchTerm] = useState('');
-  const [departmentFilter, setDepartmentFilter] = useState('All Departments');
-  const [statusFilter, setStatusFilter] = useState('All Statuses');
+  const [departmentFilter, setDepartmentFilter] = useState<string>('All Departments');
+  const [statusFilter, setStatusFilter] = useState<string>('All Statuses');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
   // Sorting
-  const [sortField, setSortField] = useState<'name' | 'employeeId' | 'department' | 'position'>('name');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [sortField, setSortField] = useState<'name' | 'department' | 'position' | 'hireDate' | 'salary'>('hireDate');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 6;
 
-  // Filter & Sort
-  const filteredEmployees = useMemo(() => {
-    return employees.filter((emp) => {
-      const matchesSearch =
-        searchTerm === '' ||
-        emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        emp.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        emp.employeeId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        emp.position.toLowerCase().includes(searchTerm.toLowerCase());
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+  } = useEmployees({
+    page: currentPage,
+    limit: pageSize,
+    search: searchTerm,
+    status: statusFilter !== 'All Statuses' ? statusFilter : undefined,
+    sortField: sortField,
+    sortOrder: sortOrder,
+  });
 
-      const matchesDept = departmentFilter === 'All Departments' || emp.department === departmentFilter;
+  const employees = data?.data ?? [];
+  const totalCount = data?.meta?.totalCount ?? data?.meta?.total ?? 0;
+  const totalPages = data?.meta?.totalPages ?? 1;
 
-      const matchesStatus = statusFilter === 'All Statuses' || emp.status === statusFilter;
-
-      return matchesSearch && matchesDept && matchesStatus;
-    })
-      .sort((a, b) => {
-        const valA = a[sortField];
-        const valB = b[sortField];
-
-        return sortOrder === 'asc'
-          ? valA.localeCompare(valB)
-          : valB.localeCompare(valA);
-      });
-  }, [employees, searchTerm, departmentFilter, statusFilter, sortField, sortOrder]);
-
-  // Paginated List
-  const totalPages = Math.max(1, Math.ceil(filteredEmployees.length / pageSize));
-  const paginatedEmployees = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return filteredEmployees.slice(start, start + pageSize);
-  }, [filteredEmployees, currentPage, pageSize]);
-
+  // Selection Handlers
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedIds(paginatedEmployees.map((e) => e.id));
+      setSelectedIds(employees.map((e) => e.id));
     } else {
       setSelectedIds([]);
     }
@@ -72,25 +57,36 @@ export default function EmployeesPage() {
   };
 
   const isAllSelected =
-    paginatedEmployees.length > 0 &&
-    paginatedEmployees.every((e) => selectedIds.includes(e.id));
+    employees.length > 0 &&
+    employees.every((e) => selectedIds.includes(e.id));
+
+  const { mutate: deleteEmployee } = useDeleteEmployee();
 
   const handleDeleteEmployee = (id: string) => {
-    setEmployees((prev) => prev.filter((e) => e.id !== id));
-    setSelectedIds((prev) => prev.filter((item) => item !== id));
-    setActiveDropdown(null);
+    deleteEmployee(id, {
+      onSuccess: () => {
+        setSelectedIds((prev) => prev.filter((item) => item !== id));
+        setActiveDropdown(null);
+      },
+    });
   };
 
   const handleDeleteSelected = () => {
-    setEmployees((prev) => prev.filter((e) => !selectedIds.includes(e.id)));
-    setSelectedIds([]);
+    selectedIds.forEach((id) => {
+      deleteEmployee(id, {
+        onSuccess: () => {
+          setSelectedIds((prev) => prev.filter((item) => item !== id));
+          setActiveDropdown(null);
+        },
+      });
+    });
   };
 
   const handleSort = (field: 'name' | 'employeeId' | 'department' | 'position') => {
     if (sortField === field) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+      setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'));
     } else {
-      setSortField(field);
+      setSortField(sortField);
       setSortOrder('asc');
     }
   };
@@ -116,7 +112,7 @@ export default function EmployeesPage() {
 
       <div className="bg-white border border-border rounded-2xl shadow-2xs overflow-hidden">
         <EmployeeTable
-          employees={paginatedEmployees}
+          employees={employees}
           selectedIds={selectedIds}
           isAllSelected={isAllSelected}
           activeDropdown={activeDropdown}
@@ -131,10 +127,10 @@ export default function EmployeesPage() {
         />
 
         <Pagination
-          currentPage={currentPage}
+          currentPage={data?.meta?.page ?? currentPage}
           totalPages={totalPages}
-          totalFilteredCount={filteredEmployees.length}
-          pageSize={pageSize}
+          totalFilteredCount={totalCount}
+          pageSize={data?.meta?.limit ?? pageSize}
           onPageChange={setCurrentPage}
           entityLabel="employees"
         />
@@ -142,3 +138,4 @@ export default function EmployeesPage() {
     </main>
   );
 }
+

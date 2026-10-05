@@ -2,34 +2,53 @@
 
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { ChevronRight, Pencil, Mail, Phone, Globe, Calendar, Package, Star } from 'lucide-react';
-import { INITIAL_SUPPLIERS } from './mockData';
+import {
+  ChevronRight, Pencil, Mail, Phone, Globe,
+  Calendar, Package, Star, Loader2,
+} from 'lucide-react';
+import { useSupplier } from './hooks/useSupplier';
 
 export default function SupplierProfilePage() {
   const params = useParams();
-  const supplierId = (params?.id as string) || 'sup-1';
+  const supplierId = (params?.id as string) || '';
 
-  const supplier = INITIAL_SUPPLIERS.find((s) => s.id === supplierId) || {
-    id: supplierId,
-    companyName: 'Acme Corp',
-    contactName: 'Jane Doe',
-    email: 'jane.doe@acme.com',
-    phone: '+1 (555) 123-4567',
-    productsSupplied: ['Electronics', 'Hardware', 'Networking'],
-    status: 'Active' as const,
-    initials: 'AC',
-    initialsBg: 'bg-blue-100 text-blue-700',
-    joinedDate: '2022-03-15',
-  };
+  const { data: supplier, isLoading, isError } = useSupplier(supplierId);
+
+  if (isLoading) {
+    return (
+      <main className="flex items-center justify-center py-32">
+        <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+      </main>
+    );
+  }
+
+  if (isError || !supplier) {
+    return (
+      <main className="max-w-7xl mx-auto pb-10">
+        <p className="text-red-500 text-sm py-12 text-center">
+          Supplier not found or failed to load.
+        </p>
+      </main>
+    );
+  }
+
+  // Derive display values
+  const initials = supplier.companyName
+    ? supplier.companyName.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()
+    : 'SU';
+
+  const statusLabel = supplier.status ?? 'Active';
+  const productsSupplied: string[] = supplier.productsSupplied ?? [];
+  const joinedDate = supplier.joinedDate
+    ? new Date(supplier.joinedDate).toLocaleDateString()
+    : '—';
+  const paymentTerms = supplier.paymentTerms ?? '—';
 
   return (
     <main className="space-y-6 max-w-7xl mx-auto pb-10">
       {/* Breadcrumb Navigation */}
       <nav className="flex items-center gap-2 text-sm text-slate-500 font-medium">
-        <Link
-          href="/suppliers"
-          className="hover:text-slate-800 transition-colors"
-        >
+        <Link href="/suppliers" className="hover:text-slate-800 transition-colors">
           Suppliers
         </Link>
         <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
@@ -43,7 +62,7 @@ export default function SupplierProfilePage() {
             {supplier.companyName}
           </h1>
           <p className="text-sm text-slate-500 font-normal mt-1">
-            Supplier Performance Profile & Contract History
+            Supplier Performance Profile &amp; Contract History
           </p>
         </div>
         <Link
@@ -61,8 +80,8 @@ export default function SupplierProfilePage() {
         {/* Left */}
         <div className="lg:col-span-1 space-y-6">
           <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-2xs text-center flex flex-col items-center">
-            <div className={`w-20 h-20 rounded-full mb-4 flex items-center justify-center text-xl font-bold border-2 border-slate-100 shadow-2xs ${supplier.initialsBg}`}>
-              {supplier.initials}
+            <div className="w-20 h-20 rounded-full mb-4 flex items-center justify-center text-xl font-bold border-2 border-slate-100 shadow-2xs bg-blue-100 text-blue-700">
+              {initials}
             </div>
 
             <h2 className="text-lg font-bold text-slate-900">{supplier.companyName}</h2>
@@ -76,13 +95,13 @@ export default function SupplierProfilePage() {
               </span>
               <span className="bg-emerald-100 text-emerald-700 text-xs font-bold px-2.5 py-1 rounded-md flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
-                {supplier.status}
+                {statusLabel}
               </span>
             </div>
 
-            <a href={`mailto:${supplier.email}`}
-              className="w-full bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-sm font-medium py-2.5 rounded-lg
-               shadow-xs hover:shadow transition-all flex items-center justify-center gap-2 cursor-pointer"
+            <a
+              href={`mailto:${supplier.email}`}
+              className="w-full bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-sm font-medium py-2.5 rounded-lg shadow-xs hover:shadow transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               <Mail className="w-4 h-4" />
               <span>Contact Vendor</span>
@@ -98,7 +117,7 @@ export default function SupplierProfilePage() {
                   <Mail className="w-4 h-4 text-slate-400 shrink-0" />
                   <span>Email</span>
                 </div>
-                <span className="font-semibold text-slate-800">{supplier.email}</span>
+                <span className="font-semibold text-slate-800">{supplier.email ?? '—'}</span>
               </div>
 
               <div className="flex items-center justify-between py-1 border-b border-slate-100 pb-2.5">
@@ -106,23 +125,33 @@ export default function SupplierProfilePage() {
                   <Phone className="w-4 h-4 text-slate-400 shrink-0" />
                   <span>Phone</span>
                 </div>
-                <span className="font-semibold text-slate-800">{supplier.phone}</span>
+                <span className="font-semibold text-slate-800">{supplier.phone ?? '—'}</span>
               </div>
 
               <div className="flex items-center justify-between py-1 border-b border-slate-100 pb-2.5">
                 <div className="flex items-center gap-2 text-slate-500 font-medium">
                   <Globe className="w-4 h-4 text-slate-400 shrink-0" />
-                  <span>Region</span>
+                  <span>Address</span>
                 </div>
-                <span className="font-semibold text-slate-800">North America</span>
+                <span className="font-semibold text-slate-800 text-right max-w-[60%] truncate">
+                  {supplier.address ?? '—'}
+                </span>
               </div>
 
-              <div className="flex items-center justify-between py-1">
+              <div className="flex items-center justify-between py-1 border-b border-slate-100 pb-2.5">
                 <div className="flex items-center gap-2 text-slate-500 font-medium">
                   <Calendar className="w-4 h-4 text-slate-400 shrink-0" />
                   <span>Vendor Since</span>
                 </div>
-                <span className="font-semibold text-slate-800">{supplier.joinedDate}</span>
+                <span className="font-semibold text-slate-800">{joinedDate}</span>
+              </div>
+
+              <div className="flex items-center justify-between py-1">
+                <div className="flex items-center gap-2 text-slate-500 font-medium">
+                  <Star className="w-4 h-4 text-slate-400 shrink-0" />
+                  <span>Payment Terms</span>
+                </div>
+                <span className="font-semibold text-blue-600">{paymentTerms}</span>
               </div>
             </div>
           </div>
@@ -130,32 +159,27 @@ export default function SupplierProfilePage() {
 
         {/* Right */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-white border border-slate-200 rounded-xl p-5 shadow-2xs">
+          {/* Stats */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 bg-white border border-slate-200 rounded-xl p-5 shadow-2xs">
             <div>
               <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
-                Quality Rating
-              </span>
-              <div className="flex items-center gap-1 mt-1">
-                <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-                <span className="text-sm font-bold text-slate-900">4.8 / 5.0</span>
-              </div>
-            </div>
-
-            <div>
-              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
-                On-Time Delivery
-              </span>
-              <span className="text-sm font-bold text-emerald-600 mt-1 block">
-                98.4%
-              </span>
-            </div>
-
-            <div>
-              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
-                Active Contracts
+                Categories Supplied
               </span>
               <span className="text-sm font-bold text-slate-900 mt-1 block">
-                4 Active
+                {productsSupplied.length} Active
+              </span>
+            </div>
+
+            <div>
+              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
+                Status
+              </span>
+              <span
+                className={`text-sm font-bold mt-1 block ${
+                  statusLabel === 'Active' ? 'text-emerald-600' : 'text-amber-600'
+                }`}
+              >
+                {statusLabel}
               </span>
             </div>
 
@@ -164,71 +188,59 @@ export default function SupplierProfilePage() {
                 Payment Terms
               </span>
               <span className="text-sm font-bold text-blue-600 mt-1 block">
-                Net 45
+                {paymentTerms}
               </span>
             </div>
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-2xs space-y-4">
-            <h3 className="text-base font-bold text-slate-900">Product Categories Supplied</h3>
+          {/* Product Categories */}
+          {productsSupplied.length > 0 && (
+            <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-2xs space-y-4">
+              <h3 className="text-base font-bold text-slate-900">Product Categories Supplied</h3>
 
-            <div className="flex flex-wrap gap-2 pt-1">
-              {supplier.productsSupplied.map((prod) => (
-                <span
-                  key={prod}
-                  className="bg-blue-50 text-blue-700 border border-blue-100 text-xs font-semibold px-3
-                   py-1.5 rounded-lg flex items-center gap-1.5"
-                >
-                  <Package className="w-3.5 h-3.5 text-blue-500" />
-                  {prod}
-                </span>
-              ))}
+              <div className="flex flex-wrap gap-2 pt-1">
+                {productsSupplied.map((prod) => (
+                  <span
+                    key={prod}
+                    className="bg-blue-50 text-blue-700 border border-blue-100 text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5"
+                  >
+                    <Package className="w-3.5 h-3.5 text-blue-500" />
+                    {prod}
+                  </span>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* Recent Shipments History */}
+          {/* Contact Details */}
           <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-2xs space-y-4">
-            <h3 className="text-base font-bold text-slate-900">Procurement & Shipment Logs</h3>
+            <h3 className="text-base font-bold text-slate-900">Full Contact Information</h3>
 
             <div className="divide-y divide-slate-100 text-xs">
-              <div className="grid grid-cols-4 pb-2.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                <span>BATCH #</span>
-                <span>CATEGORY</span>
-                <span>STATUS</span>
-                <span className="text-right">RECEIVED DATE</span>
+              <div className="grid grid-cols-3 py-3 items-center">
+                <span className="font-semibold text-slate-500">Company</span>
+                <span className="col-span-2 font-bold text-slate-900">{supplier.companyName}</span>
               </div>
-
-              <div className="grid grid-cols-4 py-3 items-center">
-                <span className="font-bold text-slate-900">#BATCH-9021</span>
-                <span className="text-slate-600 font-medium">Electronics</span>
-                <div>
-                  <span className="bg-emerald-50 text-emerald-700 text-[11px] font-semibold px-2 py-0.5 rounded">
-                    Passed Quality Inspection
-                  </span>
-                </div>
-                <span className="text-slate-500 text-right">Oct 20, 2024</span>
+              <div className="grid grid-cols-3 py-3 items-center">
+                <span className="font-semibold text-slate-500">Contact</span>
+                <span className="col-span-2 font-bold text-slate-900">{supplier.contactName}</span>
               </div>
-
-              <div className="grid grid-cols-4 py-3 items-center">
-                <span className="font-bold text-slate-900">#BATCH-8814</span>
-                <span className="text-slate-600 font-medium">Networking</span>
-                <div>
-                  <span className="bg-emerald-50 text-emerald-700 text-[11px] font-semibold px-2 py-0.5 rounded">
-                    Passed Quality Inspection
-                  </span>
-                </div>
-                <span className="text-slate-500 text-right">Sep 15, 2024</span>
+              <div className="grid grid-cols-3 py-3 items-center">
+                <span className="font-semibold text-slate-500">Email</span>
+                <a
+                  href={`mailto:${supplier.email}`}
+                  className="col-span-2 font-bold text-blue-600 hover:underline"
+                >
+                  {supplier.email ?? '—'}
+                </a>
               </div>
-
-              <div className="grid grid-cols-4 py-3 items-center">
-                <span className="font-bold text-slate-900">#BATCH-7620</span>
-                <span className="text-slate-600 font-medium">Hardware</span>
-                <div>
-                  <span className="bg-emerald-50 text-emerald-700 text-[11px] font-semibold px-2 py-0.5 rounded">
-                    Passed Quality Inspection
-                  </span>
-                </div>
-                <span className="text-slate-500 text-right">Aug 28, 2024</span>
+              <div className="grid grid-cols-3 py-3 items-center">
+                <span className="font-semibold text-slate-500">Phone</span>
+                <span className="col-span-2 font-bold text-slate-900">{supplier.phone ?? '—'}</span>
+              </div>
+              <div className="grid grid-cols-3 py-3 items-center">
+                <span className="font-semibold text-slate-500">Address</span>
+                <span className="col-span-2 font-bold text-slate-900">{supplier.address ?? '—'}</span>
               </div>
             </div>
           </div>

@@ -1,62 +1,99 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ChevronRight, ChevronDown, Check, Sparkles, Package } from 'lucide-react';
+import { ChevronRight, ChevronDown, Plus, FolderPlus } from 'lucide-react';
 
-const CATEGORIES = [
-  'Networking',
-  'Hardware',
-  'Storage',
-  'Peripherals',
-  'Electronics',
-] as const;
-
-const STOCK_STATUSES = ['In Stock', 'Low Stock', 'Out of Stock'] as const;
+import { useCreateProduct } from './hooks/useCreateProduct';
+import { useCategories, useCreateCategory } from '../categories/hooks/useCategories';
 
 export default function CreateProductPage() {
   const router = useRouter();
-  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { data: categories = [], isLoading: categoriesLoading } = useCategories();
+  const { mutateAsync: createCategoryMutation, isPending: isCreatingCategory } = useCreateCategory();
 
   const [formData, setFormData] = useState({
     name: '',
     sku: '',
-    category: 'Networking',
-    price: '',
-    stock: '',
-    stockStatus: 'In Stock',
-    manufacturer: '',
-    supplierCode: '',
-    description: '',
+    categoryId: '',
+    unitPrice: '',
+    costPrice: '',
+    stockQuantity: '',
+    reorderLevel: '5',
   });
 
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [successMessage, setSuccessMessage] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [showAddCategory, setShowAddCategory] = useState(false);
+  const [categoryError, setCategoryError] = useState('');
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+  // Auto-select first category if available and no category selected
+  useEffect(() => {
+    if (categories.length > 0 && !formData.categoryId) {
+      setFormData((prev) => ({ ...prev, categoryId: categories[0].id }));
+    }
+  }, [categories, formData.categoryId]);
+
+  const {
+    mutate: createProduct,
+    isPending,
+    isError,
+    error,
+  } = useCreateProduct();
+
+  const handleCreateCategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCategoryError('');
+    if (!newCategoryName.trim()) return;
+
+    try {
+      const newCat = await createCategoryMutation(newCategoryName.trim());
+      setFormData((prev) => ({ ...prev, categoryId: newCat.id }));
+      setNewCategoryName('');
+      setShowAddCategory(false);
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || 'Failed to create category';
+      setCategoryError(Array.isArray(msg) ? msg.join(', ') : msg);
     }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
 
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setSuccessMessage(true);
-      setTimeout(() => {
-        router.push('/products');
-      }, 1000);
-    }, 400);
+    if (!formData.categoryId) {
+      alert('Please select or create a category first.');
+      return;
+    }
+
+    createProduct(
+      {
+        name: formData.name.trim(),
+        sku: formData.sku.trim(),
+        categoryId: formData.categoryId,
+        unitPrice: Number(formData.unitPrice) || 0,
+        costPrice: Number(formData.costPrice) || 0,
+        stockQuantity: Math.max(0, parseInt(formData.stockQuantity, 10) || 0),
+        reorderLevel: Math.max(0, parseInt(formData.reorderLevel, 10) || 0),
+      },
+      {
+        onSuccess: () => {
+          router.push('/products');
+        },
+      }
+    );
+  };
+
+  const getErrorMessage = () => {
+    if (!isError || !error) return null;
+    const axiosData = (error as any)?.response?.data;
+    if (axiosData?.message) {
+      if (Array.isArray(axiosData.message)) {
+        return axiosData.message.join(' | ');
+      }
+      return axiosData.message;
+    }
+    return error instanceof Error ? error.message : 'Failed to create product';
   };
 
   return (
@@ -85,54 +122,8 @@ export default function CreateProductPage() {
       {/* Card Form */}
       <div className="bg-white border border-slate-200 rounded-xl shadow-2xs p-6 md:p-8">
         <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Section 1 */}
-          <div>
-            <h2 className="text-base font-bold text-slate-900 mb-4">
-              Product Image
-            </h2>
-            <div className="flex items-center gap-5">
-              <div className="w-24 h-24 rounded-xl bg-[#F0F4FF] border border-indigo-100/80 flex items-center
-               justify-center shrink-0 overflow-hidden relative group shadow-2xs">
-                {imagePreview ? (
-                  <img
-                    src={imagePreview}
-                    alt="Preview"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="relative flex items-center justify-center w-full h-full text-indigo-400">
-                    <Package className="w-9 h-9 text-slate-400" />
-                    <Sparkles className="w-3.5 h-3.5 text-indigo-500 absolute top-3.5 right-3.5" />
-                  </div>
-                )}
-              </div>
 
-              <div>
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleImageChange}
-                  accept="image/png, image/jpeg, image/webp"
-                  className="hidden"
-                />
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-sm font-medium
-                   px-4 py-2 rounded-lg shadow-2xs transition-colors cursor-pointer"
-                >
-                  Upload Product Image
-                </button>
-                <p className="text-xs text-slate-400 mt-2 font-normal">
-                  PNG, JPG or WEBP. Max size of 2MB
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <hr className="border-t border-slate-200/80" />
-
-          {/* Section 2 > Product Information */}
+          {/* Section 1 > Product General Details */}
           <div>
             <h2 className="text-base font-bold text-slate-900 mb-5">
               General Details
@@ -174,55 +165,115 @@ export default function CreateProductPage() {
                 />
               </div>
 
-              {/* Category */}
+              {/* Category Dropdown & Quick Create */}
               <div>
-                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
-                  CATEGORY *
-                </label>
-                <div className="relative">
-                  <select
-                    value={formData.category}
-                    onChange={(e) =>
-                      setFormData({ ...formData, category: e.target.value })
-                    }
-                    className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900
-                     focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all appearance-none pr-10 cursor-pointer"
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
+                    CATEGORY *
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddCategory(!showAddCategory)}
+                    className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 cursor-pointer"
                   >
-                    {CATEGORIES.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <FolderPlus className="w-3.5 h-3.5" />
+                    {showAddCategory ? 'Cancel' : 'New Category'}
+                  </button>
                 </div>
+
+                {showAddCategory ? (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={newCategoryName}
+                      onChange={(e) => setNewCategoryName(e.target.value)}
+                      placeholder="Category name..."
+                      className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleCreateCategory}
+                      disabled={isCreatingCategory || !newCategoryName.trim()}
+                      className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg disabled:opacity-50 cursor-pointer"
+                    >
+                      {isCreatingCategory ? 'Saving...' : 'Add'}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <select
+                      required
+                      value={formData.categoryId}
+                      onChange={(e) =>
+                        setFormData({ ...formData, categoryId: e.target.value })
+                      }
+                      className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900
+                       focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all appearance-none pr-10 cursor-pointer"
+                    >
+                      {categoriesLoading && <option value="">Loading categories...</option>}
+                      {!categoriesLoading && categories.length === 0 && (
+                        <option value="">No categories found. Click 'New Category' above.</option>
+                      )}
+                      {categories.map((cat) => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  </div>
+                )}
+                {categoryError && (
+                  <p className="text-xs text-red-600 mt-1">{categoryError}</p>
+                )}
               </div>
             </div>
           </div>
 
           <hr className="border-t border-slate-200/80" />
 
-          {/* Section 3 */}
+          {/* Section 2 > Pricing & Inventory */}
           <div>
             <h2 className="text-base font-bold text-slate-900 mb-5">
               Pricing & Inventory
             </h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+              {/* Unit Price */}
               <div>
                 <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
-                  PRICE ($) *
+                  UNIT PRICE ($) *
                 </label>
                 <input
                   type="number"
                   step="0.01"
                   required
                   min="0"
-                  value={formData.price}
+                  value={formData.unitPrice}
                   onChange={(e) =>
-                    setFormData({ ...formData, price: e.target.value })
+                    setFormData({ ...formData, unitPrice: e.target.value })
                   }
                   placeholder="299.99"
+                  className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm
+                   text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+                />
+              </div>
+
+              {/* Cost Price */}
+              <div>
+                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
+                  COST PRICE ($) *
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  required
+                  min="0"
+                  value={formData.costPrice}
+                  onChange={(e) =>
+                    setFormData({ ...formData, costPrice: e.target.value })
+                  }
+                  placeholder="150.00"
                   className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm
                    text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
                 />
@@ -231,15 +282,16 @@ export default function CreateProductPage() {
               {/* Stock Quantity */}
               <div>
                 <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
-                  STOCK QUANTITY *
+                  INITIAL STOCK QUANTITY *
                 </label>
                 <input
                   type="number"
                   required
                   min="0"
-                  value={formData.stock}
+                  step="1"
+                  value={formData.stockQuantity}
                   onChange={(e) =>
-                    setFormData({ ...formData, stock: e.target.value })
+                    setFormData({ ...formData, stockQuantity: e.target.value })
                   }
                   placeholder="100"
                   className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm
@@ -247,119 +299,57 @@ export default function CreateProductPage() {
                 />
               </div>
 
-              {/* Stock Status */}
+              {/* Reorder Level */}
               <div>
                 <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
-                  STOCK STATUS *
+                  REORDER LEVEL *
                 </label>
-                <div className="relative">
-                  <select
-                    value={formData.stockStatus}
-                    onChange={(e) =>
-                      setFormData({ ...formData, stockStatus: e.target.value })
-                    }
-                    className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900
-                     focus:outline-none focus:ring-2 focus:ring-blue-500/20  transition-all appearance-none pr-10 cursor-pointer"
-                  >
-                    {STOCK_STATUSES.map((st) => (
-                      <option key={st} value={st}>
-                        {st}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <hr className="border-t border-slate-200/80" />
-
-          {/* Section 4*/}
-          <div>
-            <h2 className="text-base font-bold text-slate-900 mb-5">
-              Additional Info
-            </h2>
-
-            <div className="space-y-5">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
-                <div>
-                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
-                    MANUFACTURER
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.manufacturer}
-                    onChange={(e) =>
-                      setFormData({ ...formData, manufacturer: e.target.value })
-                    }
-                    placeholder="e.g. Acme Systems"
-                    className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm
-                     text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
-                    SUPPLIER CODE
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.supplierCode}
-                    onChange={(e) =>
-                      setFormData({ ...formData, supplierCode: e.target.value })
-                    }
-                    placeholder="e.g. SUP-8821"
-                    className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm
-                     text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
-                  DESCRIPTION
-                </label>
-                <textarea
-                  rows={4}
-                  value={formData.description}
+                <input
+                  type="number"
+                  required
+                  min="0"
+                  step="1"
+                  value={formData.reorderLevel}
                   onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
+                    setFormData({ ...formData, reorderLevel: e.target.value })
                   }
-                  placeholder="Enter detailed product description..."
+                  placeholder="5"
                   className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm
                    text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
                 />
+                <p className="text-xs text-slate-400 mt-1">Alert triggers when stock drops below or equals this number.</p>
               </div>
             </div>
           </div>
 
-          <div className="pt-6 border-t border-slate-100 flex items-center justify-end gap-3">
-            <button
-              type="button"
-              onClick={() => router.push('/products')}
-              className="px-4 py-2.5 text-sm font-medium text-slate-600 hover:text-slate-900
-               hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="px-5 py-2.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-sm font-medium
-               rounded-lg shadow-xs hover:shadow transition-all cursor-pointer flex items-center gap-2 disabled:opacity-75"
-            >
-              {successMessage ? (
-                <>
-                  <Check className="w-4 h-4 text-white" />
-                  <span>Created! Redirecting...</span>
-                </>
-              ) : isSubmitting ? (
-                <span>Creating...</span>
-              ) : (
-                <span>Create Product</span>
-              )}
-            </button>
+          <div className="pt-6 border-t border-slate-100 flex flex-col items-end gap-3">
+            {isError && (
+              <div className="w-full p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 font-medium">
+                {getErrorMessage()}
+              </div>
+            )}
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => router.push('/products')}
+                className="px-4 py-2.5 text-sm font-medium text-slate-600 hover:text-slate-900
+                 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isPending}
+                className="px-5 py-2.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-sm font-medium
+                 rounded-lg shadow-xs hover:shadow transition-all cursor-pointer flex items-center gap-2 disabled:opacity-75"
+              >
+                {isPending ? (
+                  <span>Creating...</span>
+                ) : (
+                  <span>Create Product</span>
+                )}
+              </button>
+            </div>
           </div>
         </form>
       </div>

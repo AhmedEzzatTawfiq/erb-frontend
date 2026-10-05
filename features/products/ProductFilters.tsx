@@ -1,50 +1,43 @@
 'use client';
 
 import React from 'react';
-import { Filter, Calendar } from 'lucide-react';
+import { Filter } from 'lucide-react';
 import SearchInput from '@/components/shared/SearchInput';
 import FilterSelect from '@/components/shared/FilterSelect';
+import { useCategories } from '../categories/hooks/useCategories';
 
 interface ProductFiltersProps {
   searchTerm: string;
   setSearchTerm: (term: string) => void;
-  categoryFilter: string;
-  setCategoryFilter: (category: string) => void;
-  stockFilter: string;
-  setStockFilter: (stock: string) => void;
+  categoryId: string;
+  setCategoryId: (id: string) => void;
+  lowStock: boolean;
+  setLowStock: (val: boolean) => void;
   showMoreFilters: boolean;
   setShowMoreFilters: (show: boolean) => void;
   onResetFilters: () => void;
   onPageReset: () => void;
 }
 
-const CATEGORY_OPTIONS = [
-  { label: 'All Categories', value: 'All Categories' },
-  { label: 'Networking', value: 'Networking' },
-  { label: 'Hardware', value: 'Hardware' },
-  { label: 'Storage', value: 'Storage' },
-  { label: 'Peripherals', value: 'Peripherals' },
-];
-
-const STOCK_OPTIONS = [
-  { label: 'Stock Status', value: 'Stock Status' },
-  { label: 'In Stock', value: 'In Stock' },
-  { label: 'Low Stock', value: 'Low Stock' },
-  { label: 'Out of Stock', value: 'Out of Stock' },
-];
-
 export default function ProductFilters({
   searchTerm,
   setSearchTerm,
-  categoryFilter,
-  setCategoryFilter,
-  stockFilter,
-  setStockFilter,
+  categoryId,
+  setCategoryId,
+  lowStock,
+  setLowStock,
   showMoreFilters,
   setShowMoreFilters,
   onResetFilters,
   onPageReset,
 }: ProductFiltersProps) {
+  const { data: categories = [] } = useCategories();
+
+  const categoryOptions = [
+    { label: 'All Categories', value: '' },
+    ...categories.map((c) => ({ label: c.name, value: c.id })),
+  ];
+
   return (
     <div className="bg-[#F8FAFC]/60 border border-border rounded-2xl p-4 md:p-5 shadow-2xs space-y-4">
       <div className="flex flex-col md:flex-row items-center justify-between gap-4">
@@ -61,26 +54,16 @@ export default function ProductFilters({
 
         <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
           <FilterSelect
-            value={categoryFilter}
+            value={categoryId}
             onChange={(val) => {
-              setCategoryFilter(val);
+              setCategoryId(val);
               onPageReset();
             }}
-            options={CATEGORY_OPTIONS}
+            options={categoryOptions}
             className="min-w-37.5 flex-1 sm:flex-initial"
           />
 
-          <FilterSelect
-            value={stockFilter}
-            onChange={(val) => {
-              setStockFilter(val);
-              onPageReset();
-            }}
-            options={STOCK_OPTIONS}
-            className="min-w-37.5 flex-1 sm:flex-initial"
-          />
-
-          {/* More Filters */}
+          {/* More Filters toggle */}
           <button
             type="button"
             onClick={() => setShowMoreFilters(!showMoreFilters)}
@@ -100,29 +83,31 @@ export default function ProductFilters({
 
       {showMoreFilters && (
         <div className="pt-4 border-t border-border grid grid-cols-1 sm:grid-cols-3 gap-4 animate-in fade-in duration-200">
-          <div>
-            <label className="text-xs font-semibold text-text-secondary block mb-1">
-              Min Price ($)
+          {/* Low Stock toggle */}
+          <div className="flex items-center gap-3">
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <div
+                role="checkbox"
+                aria-checked={lowStock}
+                onClick={() => {
+                  setLowStock(!lowStock);
+                  onPageReset();
+                }}
+                className={`w-9 h-5 rounded-full transition-colors cursor-pointer ${
+                  lowStock ? 'bg-primary' : 'bg-slate-200'
+                } relative`}
+              >
+                <span
+                  className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
+                    lowStock ? 'translate-x-4' : 'translate-x-0'
+                  }`}
+                />
+              </div>
+              <span className="text-xs font-semibold text-text-secondary">Low Stock Only</span>
             </label>
-            <input
-              type="number"
-              placeholder="e.g. 100"
-              className="w-full px-3 py-2 text-sm bg-white border border-border rounded-lg
-               focus:outline-none focus:ring-2 focus:ring-primary/20"
-            />
           </div>
-          <div>
-            <label className="text-xs font-semibold text-text-secondary block mb-1">
-              Max Price ($)
-            </label>
-            <input
-              type="number"
-              placeholder="e.g. 2000"
-              className="w-full px-3 py-2 text-sm bg-white border border-border rounded-lg
-               focus:outline-none focus:ring-2 focus:ring-primary/20"
-            />
-          </div>
-          <div className="flex items-end">
+
+          <div className="flex items-end sm:col-start-3">
             <button
               type="button"
               onClick={onResetFilters}
@@ -135,4 +120,4 @@ export default function ProductFilters({
       )}
     </div>
   );
-};
+}

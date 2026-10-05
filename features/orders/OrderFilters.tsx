@@ -22,11 +22,10 @@ interface OrderFiltersProps {
 
 const STATUS_OPTIONS = [
   { label: 'All Statuses', value: 'All Statuses' },
-  { label: 'Processing', value: 'Processing' },
+  { label: 'Pending', value: 'Pending' },
+  { label: 'Confirmed', value: 'Confirmed' },
   { label: 'Shipped', value: 'Shipped' },
   { label: 'Delivered', value: 'Delivered' },
-  { label: 'Pending', value: 'Pending' },
-  { label: 'Cancelled', value: 'Cancelled' },
 ];
 
 const DATE_RANGE_OPTIONS = [

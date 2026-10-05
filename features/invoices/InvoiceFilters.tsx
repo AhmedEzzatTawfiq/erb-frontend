@@ -11,8 +11,6 @@ interface InvoiceFiltersProps {
   setDateFrom: (date: string) => void;
   dateTo: string;
   setDateTo: (date: string) => void;
-  dateRange: string;
-  setDateRange: (date: string) => void;
   searchTerm: string;
   setSearchTerm: (term: string) => void;
   showMoreFilters: boolean;

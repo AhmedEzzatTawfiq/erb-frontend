@@ -3,54 +3,64 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
-import { ChevronRight, ChevronDown, Sparkles, Check } from 'lucide-react';
-import { INITIAL_USERS } from './mockData';
+import { ChevronRight, ChevronDown, Sparkles } from 'lucide-react';
+import { useUser } from './hooks/useUser';
+import { useUpdateUser } from './hooks/useUpdateUser';
 
 export default function EditUserPage() {
   const router = useRouter();
   const params = useParams();
-  const userId = (params?.id as string) || 'usr-1';
+  const userId = params?.id as string;
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const { data: userData, isLoading } = useUser(userId);
+
   const [formData, setFormData] = useState({
-    firstName: 'Alex',
-    lastName: 'Morgan',
-    email: 'alex.morgan@company.com',
-    role: 'Admin',
-    status: 'Active',
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    role: '',
+    status: '',
   });
 
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(
-    'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=120'
-  );
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [successMessage, setSuccessMessage] = useState(false);
+  const [avatar, setAvatar] = useState<string | null>(null);
 
   useEffect(() => {
-    const existing = INITIAL_USERS.find((u) => u.id === userId);
-    if (existing) {
-      const parts = existing.name.split(' ');
-      setFormData((prev) => ({
-        ...prev,
-        firstName: parts[0] || '',
-        lastName: parts.slice(1).join(' ') || '',
-        email: existing.email,
-        role: existing.role,
-        status: existing.status,
-      }));
-      if (existing.avatar) {
-        setAvatarPreview(existing.avatar);
-      }
+    if (!userData) return;
+
+    const parts = (userData.name || '').split(' ');
+    const first = parts[0] || '';
+    const last = parts.slice(1).join(' ') || '';
+
+    setFormData({
+      firstName: first,
+      lastName: last,
+      email: userData.email || '',
+      password: '',
+      role: userData.role || '',
+      status: userData.status || 'Active',
+    });
+
+    if (userData.avatar) {
+      setAvatar(userData.avatar);
     }
-  }, [userId]);
+  }, [userData]);
+
+  const {
+    mutate: updateUser,
+    isPending,
+    isError,
+    error,
+  } = useUpdateUser();
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setAvatarPreview(reader.result as string);
+        setAvatar(reader.result as string);
       };
       reader.readAsDataURL(file);
     }
@@ -58,15 +68,21 @@ export default function EditUserPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
 
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setSuccessMessage(true);
-      setTimeout(() => {
+    const payload = {
+      name: `${formData.firstName} ${formData.lastName}`,
+      email: formData.email,
+      ...(formData.password && { password: formData.password }),
+      role: formData.role,
+      status: formData.status,
+      ...(avatar && { avatar }),
+    };
+
+    updateUser({ id: userId, data: payload }, {
+      onSuccess: () => {
         router.push('/users');
-      }, 1000);
-    }, 400);
+      },
+    });
   };
 
   return (
@@ -81,9 +97,14 @@ export default function EditUserPage() {
       </nav>
 
       {/* Page Title */}
-      <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-        Edit User: {formData.firstName} {formData.lastName}
-      </h1>
+      <div>
+        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+          Edit User: {formData.firstName} {formData.lastName}
+        </h1>
+        <p className="text-sm text-slate-500 font-normal mt-1">
+          Update user role, status, and contact details.
+        </p>
+      </div>
 
       {/* Card Form */}
       <div className="bg-white border border-slate-200 rounded-xl shadow-2xs p-6 md:p-8">
@@ -96,10 +117,10 @@ export default function EditUserPage() {
             <div className="flex items-center gap-5">
               <div className="w-20 h-20 rounded-xl bg-[#F0F4FF] border border-indigo-100/80 flex items-center
                justify-center shrink-0 overflow-hidden relative group shadow-2xs">
-                {avatarPreview ? (
+                {avatar ? (
                   <img
-                    src={avatarPreview}
-                    alt="Preview"
+                    src={avatar}
+                    alt="avatar"
                     className="w-full h-full object-cover"
                   />
                 ) : (
@@ -147,7 +168,7 @@ export default function EditUserPage() {
 
           <hr className="border-t border-slate-200/80" />
 
-          {/* Section 2 */}
+          {/* Section 2: Personal Information */}
           <div>
             <h2 className="text-base font-bold text-slate-900 mb-5">
               Personal Information
@@ -156,7 +177,7 @@ export default function EditUserPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
               <div>
                 <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
-                  FIRST NAME
+                  FIRST NAME *
                 </label>
                 <input
                   type="text"
@@ -172,7 +193,7 @@ export default function EditUserPage() {
 
               <div>
                 <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
-                  LAST NAME
+                  LAST NAME *
                 </label>
                 <input
                   type="text"
@@ -188,7 +209,7 @@ export default function EditUserPage() {
 
               <div>
                 <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
-                  EMAIL ADDRESS
+                  EMAIL ADDRESS *
                 </label>
                 <input
                   type="email"
@@ -204,7 +225,23 @@ export default function EditUserPage() {
 
               <div>
                 <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
-                  ROLE
+                  NEW PASSWORD
+                </label>
+                <input
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) =>
+                    setFormData({ ...formData, password: e.target.value })
+                  }
+                  placeholder="Leave blank to keep current"
+                  className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm
+                   text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
+                  ROLE *
                 </label>
                 <div className="relative">
                   <select
@@ -215,11 +252,10 @@ export default function EditUserPage() {
                     className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900
                      focus:outline-none focus:ring-2 focus:ring-blue-500/20  transition-all appearance-none pr-10 cursor-pointer"
                   >
-                    <option value="Standard User">Standard User</option>
+                    <option value="" disabled hidden>Select Role</option>
                     <option value="Admin">Admin</option>
                     <option value="Manager">Manager</option>
-                    <option value="Editor">Editor</option>
-                    <option value="Viewer">Viewer</option>
+                    <option value="Employee">Employee</option>
                   </select>
                   <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
@@ -227,7 +263,7 @@ export default function EditUserPage() {
 
               <div>
                 <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
-                  STATUS
+                  STATUS *
                 </label>
                 <div className="relative">
                   <select
@@ -240,7 +276,6 @@ export default function EditUserPage() {
                   >
                     <option value="Active">Active</option>
                     <option value="Inactive">Inactive</option>
-                    <option value="Suspended">Suspended</option>
                   </select>
                   <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
@@ -259,21 +294,23 @@ export default function EditUserPage() {
             </button>
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isPending}
               className="px-5 py-2.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-sm font-medium rounded-lg
                shadow-xs hover:shadow transition-all cursor-pointer flex items-center gap-2 disabled:opacity-75"
             >
-              {successMessage ? (
-                <>
-                  <Check className="w-4 h-4 text-white" />
-                  <span>Saved! Redirecting...</span>
-                </>
-              ) : isSubmitting ? (
+              {isPending ? (
                 <span>Saving...</span>
               ) : (
                 <span>Save Changes</span>
               )}
             </button>
+            {isError && (
+              <p className="text-sm text-red-600">
+                {error instanceof Error
+                  ? error.message
+                  : 'Failed to update user'}
+              </p>
+            )}
           </div>
         </form>
       </div>

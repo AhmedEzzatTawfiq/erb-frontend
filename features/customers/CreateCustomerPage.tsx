@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ChevronRight, ChevronDown, Check } from 'lucide-react';
+import { ChevronRight, ChevronDown } from 'lucide-react';
+import { useCreateCustomer } from './hooks/useCreateCustomer';
 
 const COUNTRIES = [
   'United States',
@@ -20,34 +21,38 @@ const COUNTRIES = [
   'Singapore',
 ];
 
+
+
 export default function CreateCustomerPage() {
   const router = useRouter();
 
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
+    companyName: '',
+    contactName: '',
     email: '',
     phone: '',
-    streetAddress: '',
+    address: '',
     city: '',
     country: '',
+    taxId: '',
   });
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [successMessage, setSuccessMessage] = useState(false);
+  const {
+    mutate: createCustomer,
+    isPending,
+    isError,
+    error,
+  } = useCreateCustomer();
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
 
-    // Simulate creation delay & success redirect
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setSuccessMessage(true);
-      setTimeout(() => {
-        router.push('/customers');
-      }, 1000);
-    }, 400);
+    createCustomer(formData, {
+      onSuccess: () => {
+        router.push('/customers')
+      }
+    })
   };
 
   return (
@@ -83,35 +88,35 @@ export default function CreateCustomerPage() {
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
-         
+
               <div>
                 <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
-                  FIRST NAME
+                  COMPANY NAME
                 </label>
                 <input
                   type="text"
                   required
-                  value={formData.firstName}
+                  value={formData.companyName}
                   onChange={(e) =>
-                    setFormData({ ...formData, firstName: e.target.value })
+                    setFormData({ ...formData, companyName: e.target.value })
                   }
-                  placeholder="e.g. Jane"
+                  placeholder="company"
                   className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
                 />
               </div>
 
               <div>
                 <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
-                  LAST NAME
+                  CONTACT NAME
                 </label>
                 <input
                   type="text"
                   required
-                  value={formData.lastName}
+                  value={formData.contactName}
                   onChange={(e) =>
-                    setFormData({ ...formData, lastName: e.target.value })
+                    setFormData({ ...formData, contactName: e.target.value })
                   }
-                  placeholder="e.g. Doe"
+                  placeholder="contact"
                   className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900  focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
                 />
               </div>
@@ -127,7 +132,7 @@ export default function CreateCustomerPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, email: e.target.value })
                   }
-                  placeholder="jane.doe@example.com"
+                  placeholder="customer@example.com"
                   className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
                 />
               </div>
@@ -158,18 +163,18 @@ export default function CreateCustomerPage() {
             </h2>
 
             <div className="space-y-5">
-    
+
               <div>
                 <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
-                  STREET ADDRESS
+                  ADDRESS
                 </label>
                 <input
                   type="text"
-                  value={formData.streetAddress}
+                  value={formData.address}
                   onChange={(e) =>
-                    setFormData({ ...formData, streetAddress: e.target.value })
+                    setFormData({ ...formData, address: e.target.value })
                   }
-                  placeholder="123 Business Rd, Suite 100"
+                  placeholder="address"
                   className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900  focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
                 />
               </div>
@@ -185,7 +190,7 @@ export default function CreateCustomerPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, city: e.target.value })
                     }
-                    placeholder="Metropolis"
+                    placeholder="city"
                     className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900  focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
                   />
                 </div>
@@ -226,18 +231,20 @@ export default function CreateCustomerPage() {
             </button>
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isPending}
               className="px-5 py-2.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-sm font-medium rounded-lg shadow-xs hover:shadow transition-all cursor-pointer flex items-center gap-2 disabled:opacity-75"
             >
-              {successMessage ? (
-                <>
-                  <Check className="w-4 h-4 text-white" />
-                  <span>Created! Redirecting...</span>
-                </>
-              ) : isSubmitting ? (
+              {isPending ? (
                 <span>Creating...</span>
               ) : (
                 <span>Create Customer</span>
+              )}
+              {isError && (
+                <p className="text-sm text-red-600">
+                  {error instanceof Error
+                    ? error.message
+                    : 'Failed to create customer'}
+                </p>
               )}
             </button>
           </div>

@@ -140,8 +140,6 @@ export default function SupplierTable({
             ) : (
               suppliers.map((supplier) => {
                 const isSelected = selectedIds.includes(supplier.id);
-                const visibleTags = supplier.productsSupplied.slice(0, MAX_TAGS_SHOWN);
-                const extraCount = supplier.productsSupplied.length - MAX_TAGS_SHOWN;
 
                 return (
                   <tr
@@ -193,21 +191,24 @@ export default function SupplierTable({
                       <div className="text-sm font-medium text-text-main">{supplier.email}</div>
                       <div className="text-xs text-text-secondary mt-0.5">{supplier.phone}</div>
                     </td>
+                    
                     <td className="py-4 px-5">
-                      <div className="flex flex-wrap gap-1.5 items-center">
-                        {visibleTags.map((tag) => (
-                          <span
-                            key={tag}
-                            className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium
-                             bg-slate-100 text-text-secondary border border-border"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                        {extraCount > 0 && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold
-                           bg-primary/10 text-primary border border-primary/20">
-                            +{extraCount}
+                      <div className="flex flex-wrap gap-1 max-w-50">
+                        {supplier.productsSupplied && supplier.productsSupplied.length > 0 ? (
+                          supplier.productsSupplied.slice(0, MAX_TAGS_SHOWN).map((prod) => (
+                            <span
+                              key={prod}
+                              className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100"
+                            >
+                              {prod}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-xs text-text-muted">—</span>
+                        )}
+                        {supplier.productsSupplied && supplier.productsSupplied.length > MAX_TAGS_SHOWN && (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600">
+                            +{supplier.productsSupplied.length - MAX_TAGS_SHOWN}
                           </span>
                         )}
                       </div>
@@ -237,10 +238,10 @@ export default function SupplierTable({
                             onClick={() => setActiveDropdown(null)}
                           />
                           <ActionDropDown
-                            href={`/customers/${supplier.id}`}
+                            href={`/suppliers/${supplier.id}`}
                             id={supplier.id}
-                            editLabel='Edit Employee'
-                            deleteLabel='Delete Employee'
+                            editLabel="Edit Supplier"
+                            deleteLabel="Delete Supplier"
                             setActiveDropdown={setActiveDropdown}
                             onDeleteUser={onDeleteSupplier}
                           />
@@ -256,4 +257,4 @@ export default function SupplierTable({
       </div>
     </div>
   );
-};
+}

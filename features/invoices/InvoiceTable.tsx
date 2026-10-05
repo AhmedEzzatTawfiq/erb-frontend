@@ -2,37 +2,39 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Invoice, InvoiceStatus } from './types';
-import { ArrowUpDown, FileText, MoreVertical, Eye, Pencil, Trash2 } from 'lucide-react';
+import { InvoiceApi, InvoiceStatus } from './types';
+import { ArrowUpDown, FileText, MoreVertical, Trash2 } from 'lucide-react';
 import ActionDropDown from '@/components/shared/ActionDropDown';
 
 interface InvoiceTableProps {
-  invoices: Invoice[];
+  invoices: InvoiceApi[];
   selectedIds: string[];
   isAllSelected: boolean;
   activeDropdown: string | null;
   setActiveDropdown: (id: string | null) => void;
   onSelectAll: (checked: boolean) => void;
   onSelectOne: (id: string) => void;
-  onSort: (field: 'invoiceNumber' | 'customer' | 'amount' | 'dueDate' | 'createdDate') => void;
-  onViewInvoice: (invoice: Invoice) => void;
-  onEditInvoice: (invoice: Invoice) => void;
+  onSort: (field: string) => void;
+  onViewInvoice: (invoice: InvoiceApi) => void;
+  onEditInvoice: (invoice: InvoiceApi) => void;
   onDeleteInvoice: (id: string) => void;
   onDeleteSelected: () => void;
   formatCurrency: (val: number) => string;
 }
 
 const STATUS_STYLES: Record<InvoiceStatus, string> = {
-  Paid: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
-  Pending: 'bg-amber-50 text-amber-600 border border-amber-200',
-  Overdue: 'bg-red-50 text-red-600 border border-red-200',
-  Cancelled: 'bg-slate-100 text-slate-500 border border-slate-200',
-  Draft: 'bg-blue-50 text-blue-500 border border-blue-200',
+  paid: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+  pending: 'bg-amber-50 text-amber-600 border border-amber-200',
+  overdue: 'bg-red-50 text-red-600 border border-red-200',
 };
 
-const InvoiceStatusBadge: React.FC<{ status: InvoiceStatus }> = ({ status }) => (
+const FALLBACK_STATUS_STYLE = 'bg-slate-100 text-slate-500 border border-slate-200';
+
+const InvoiceStatusBadge: React.FC<{ status: string }> = ({ status }) => (
   <span
-    className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold ${STATUS_STYLES[status]}`}
+    className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold capitalize ${
+      STATUS_STYLES[status as InvoiceStatus] ?? FALLBACK_STATUS_STYLE
+    }`}
   >
     {status}
   </span>
@@ -83,19 +85,17 @@ export default function InvoiceTable({
                 />
               </th>
               <th
-                onClick={() => onSort('invoiceNumber')}
-                className="py-3.5 px-5 text-xs font-semibold text-text-secondary uppercase
-                 tracking-wider cursor-pointer select-none hover:text-text-main transition-colors"
+                onClick={() => onSort('id')}
+                className="py-3.5 px-5 text-xs font-semibold text-text-secondary uppercase tracking-wider cursor-pointer select-none hover:text-text-main transition-colors"
               >
                 <div className="flex items-center gap-1.5">
-                  <span>INVOICE #</span>
+                  <span>INVOICE ID</span>
                   <ArrowUpDown className="w-3 h-3 text-text-muted" />
                 </div>
               </th>
               <th
                 onClick={() => onSort('customer')}
-                className="py-3.5 px-5 text-xs font-semibold text-text-secondary uppercase
-                 tracking-wider cursor-pointer select-none hover:text-text-main transition-colors"
+                className="py-3.5 px-5 text-xs font-semibold text-text-secondary uppercase tracking-wider cursor-pointer select-none hover:text-text-main transition-colors"
               >
                 <div className="flex items-center gap-1.5">
                   <span>CUSTOMER</span>
@@ -103,12 +103,11 @@ export default function InvoiceTable({
                 </div>
               </th>
               <th className="py-3.5 px-5 text-xs font-semibold text-text-secondary uppercase tracking-wider">
-                ORDER #
+                ORDER ID
               </th>
               <th
-                onClick={() => onSort('amount')}
-                className="py-3.5 px-5 text-xs font-semibold text-text-secondary uppercase tracking-wider
-                 text-right cursor-pointer select-none hover:text-text-main transition-colors"
+                onClick={() => onSort('totalAmount')}
+                className="py-3.5 px-5 text-xs font-semibold text-text-secondary uppercase tracking-wider text-right cursor-pointer select-none hover:text-text-main transition-colors"
               >
                 <div className="flex items-center justify-end gap-1.5">
                   <span>AMOUNT</span>
@@ -117,8 +116,7 @@ export default function InvoiceTable({
               </th>
               <th
                 onClick={() => onSort('dueDate')}
-                className="py-3.5 px-5 text-xs font-semibold text-text-secondary uppercase tracking-wider 
-                cursor-pointer select-none hover:text-text-main transition-colors"
+                className="py-3.5 px-5 text-xs font-semibold text-text-secondary uppercase tracking-wider cursor-pointer select-none hover:text-text-main transition-colors"
               >
                 <div className="flex items-center gap-1.5">
                   <span>DUE DATE</span>
@@ -129,12 +127,11 @@ export default function InvoiceTable({
                 STATUS
               </th>
               <th
-                onClick={() => onSort('createdDate')}
-                className="py-3.5 px-5 text-xs font-semibold text-text-secondary uppercase
-                 tracking-wider cursor-pointer select-none hover:text-text-main transition-colors"
+                onClick={() => onSort('invoiceDate')}
+                className="py-3.5 px-5 text-xs font-semibold text-text-secondary uppercase tracking-wider cursor-pointer select-none hover:text-text-main transition-colors"
               >
                 <div className="flex items-center gap-1.5">
-                  <span>CREATED DATE</span>
+                  <span>ISSUE DATE</span>
                   <ArrowUpDown className="w-3 h-3 text-text-muted" />
                 </div>
               </th>
@@ -157,13 +154,15 @@ export default function InvoiceTable({
             ) : (
               invoices.map((invoice) => {
                 const isSelected = selectedIds.includes(invoice.id);
-                const isOverdue = invoice.status === 'Overdue';
+                const isOverdue = invoice.status === 'overdue';
+                const shortId = invoice.id.slice(0, 8).toUpperCase();
+                const customerName = invoice.customer?.companyName ?? '—';
+                const orderId = invoice.orderId ? invoice.orderId.slice(0, 8).toUpperCase() : '—';
 
                 return (
                   <tr
                     key={invoice.id}
-                    className={`hover:bg-slate-50/70 transition-colors ${isSelected ? 'bg-blue-50/30' : ''
-                      }`}
+                    className={`hover:bg-slate-50/70 transition-colors ${isSelected ? 'bg-blue-50/30' : ''}`}
                   >
                     {/* Checkbox */}
                     <td className="py-4 px-5 text-center">
@@ -180,24 +179,24 @@ export default function InvoiceTable({
                         href={`/invoices/${invoice.id}`}
                         className="text-sm font-bold text-primary hover:underline cursor-pointer block"
                       >
-                        {invoice.invoiceNumber}
+                        #{shortId}
                       </Link>
                     </td>
 
                     <td className="py-4 px-5 text-sm font-medium text-text-main">
-                      {invoice.customer}
+                      {customerName}
                     </td>
 
                     <td className="py-4 px-5 text-sm text-text-secondary font-medium">
-                      {invoice.orderNumber}
+                      #{orderId}
                     </td>
 
                     <td className="py-4 px-5 text-right text-sm font-bold text-text-main">
-                      {formatCurrency(invoice.amount)}
+                      {formatCurrency(Number(invoice.totalAmount))}
                     </td>
 
                     <td className={`py-4 px-5 text-sm font-medium whitespace-nowrap ${isOverdue ? 'text-red-600 font-semibold' : 'text-text-main'}`}>
-                      {invoice.dueDate}
+                      {invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString() : '—'}
                     </td>
 
                     <td className="py-4 px-5">
@@ -205,7 +204,7 @@ export default function InvoiceTable({
                     </td>
 
                     <td className="py-4 px-5 text-sm text-text-secondary font-medium whitespace-nowrap">
-                      {invoice.createdDate}
+                      {invoice.invoiceDate ? new Date(invoice.invoiceDate).toLocaleDateString() : '—'}
                     </td>
 
                     <td className="py-4 px-5 text-right relative">
@@ -222,7 +221,6 @@ export default function InvoiceTable({
                         <MoreVertical className="w-4 h-4" />
                       </button>
 
-                      {/* Dropdown Menu */}
                       {activeDropdown === invoice.id && (
                         <>
                           <div
@@ -230,12 +228,12 @@ export default function InvoiceTable({
                             onClick={() => setActiveDropdown(null)}
                           />
                           <ActionDropDown
-                            href={`/customers/${invoice.id}`}
+                            href={`/invoices/${invoice.id}`}
                             id={invoice.id}
-                            editLabel='Edit Employee'
-                            deleteLabel='Delete Employee'
+                            editLabel="View Invoice"
+                            deleteLabel="Close"
                             setActiveDropdown={setActiveDropdown}
-                            onDeleteUser={onDeleteInvoice}
+                            onDeleteUser={() => setActiveDropdown(null)}
                           />
                         </>
                       )}
@@ -249,4 +247,4 @@ export default function InvoiceTable({
       </div>
     </div>
   );
-};
+}

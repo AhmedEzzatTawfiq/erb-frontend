@@ -1,17 +1,16 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Supplier } from './types';
-import { INITIAL_SUPPLIERS } from './mockData';
 import SupplierHeader from './SupplierHeader';
 import SupplierFilters from './SupplierFilters';
 import SupplierTable from './SupplierTable';
 import Pagination from '@/components/shared/Pagination';
+import { useSuppliers } from './hooks/useSuppliers';
+import { useDeleteSupplier } from './hooks/useDeleteSupplier';
 
 export default function SuppliersPage() {
   const router = useRouter();
-  const [suppliers, setSuppliers] = useState<Supplier[]>(INITIAL_SUPPLIERS);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('All Statuses');
   const [categoryFilter, setCategoryFilter] = useState<string>('All Categories');
@@ -24,47 +23,32 @@ export default function SuppliersPage() {
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 5;
+  const pageSize = 6;
   const [showMoreFilters, setShowMoreFilters] = useState(false);
 
-  // Filter & Sort
-  const filteredSuppliers = useMemo(() => {
-    return suppliers
-      .filter((sup) => {
-        const matchesSearch =
-          searchTerm === '' ||
-          sup.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          sup.contactName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          sup.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          sup.productsSupplied.some((p) => p.toLowerCase().includes(searchTerm.toLowerCase()));
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+  } = useSuppliers({
+    page: currentPage,
+    limit: pageSize,
+    search: searchTerm,
+    status: statusFilter !== 'All Statuses' ? statusFilter : undefined,
+    sortField,
+    sortOrder,
+  });
 
-        const matchesStatus = statusFilter === 'All Statuses' || sup.status === statusFilter;
-
-        const matchesCategory = categoryFilter === 'All Categories' ||
-          sup.productsSupplied.includes(categoryFilter);
-
-        return matchesSearch && matchesStatus && matchesCategory;
-      })
-      .sort((a, b) => {
-        const valA = a[sortField];
-        const valB = b[sortField];
-        return sortOrder === 'asc'
-          ? valA.localeCompare(valB)
-          : valB.localeCompare(valA);
-      });
-  }, [suppliers, searchTerm, statusFilter, categoryFilter, sortField, sortOrder]);
-
-  // Paginated List
-  const totalPages = Math.max(1, Math.ceil(filteredSuppliers.length / pageSize));
-  const paginatedSuppliers = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return filteredSuppliers.slice(start, start + pageSize);
-  }, [filteredSuppliers, currentPage, pageSize]);
+  const suppliers = Array.isArray(data) ? data : (data?.data ?? []);
+  const totalCount = Array.isArray(data) ? data.length : (data?.meta?.totalCount ?? data?.meta?.total ?? suppliers.length);
+  const totalPages = Array.isArray(data) ? 1 : (data?.meta?.totalPages ?? 1);
+  console.log('suppliers', data); 
 
   // Selection Handlers
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedIds(paginatedSuppliers.map((s) => s.id));
+      setSelectedIds(suppliers.map((s) => s.id));
     } else {
       setSelectedIds([]);
     }
@@ -77,18 +61,29 @@ export default function SuppliersPage() {
   };
 
   const isAllSelected =
-    paginatedSuppliers.length > 0 &&
-    paginatedSuppliers.every((s) => selectedIds.includes(s.id));
+    suppliers.length > 0 &&
+    suppliers.every((s) => selectedIds.includes(s.id));
+
+  const { mutate: deleteSupplier } = useDeleteSupplier();
 
   const handleDeleteSupplier = (id: string) => {
-    setSuppliers((prev) => prev.filter((s) => s.id !== id));
-    setSelectedIds((prev) => prev.filter((item) => item !== id));
-    setActiveDropdown(null);
+    deleteSupplier(id, {
+      onSuccess: () => {
+        setSelectedIds((prev) => prev.filter((item) => item !== id));
+        setActiveDropdown(null);
+      },
+    });
   };
 
   const handleDeleteSelected = () => {
-    setSuppliers((prev) => prev.filter((s) => !selectedIds.includes(s.id)));
-    setSelectedIds([]);
+    selectedIds.forEach((id) => {
+      deleteSupplier(id, {
+        onSuccess: () => {
+          setSelectedIds((prev) => prev.filter((item) => item !== id));
+          setActiveDropdown(null);
+        },
+      });
+    });
   };
 
   const handleSort = (field: 'companyName' | 'contactName') => {
@@ -123,7 +118,7 @@ export default function SuppliersPage() {
 
       <div className="bg-white border border-border rounded-2xl shadow-2xs overflow-hidden">
         <SupplierTable
-          suppliers={paginatedSuppliers}
+          suppliers={suppliers}
           selectedIds={selectedIds}
           isAllSelected={isAllSelected}
           activeDropdown={activeDropdown}
@@ -138,10 +133,10 @@ export default function SuppliersPage() {
         />
 
         <Pagination
-          currentPage={currentPage}
+          currentPage={data?.meta?.page ?? currentPage}
           totalPages={totalPages}
-          totalFilteredCount={filteredSuppliers.length}
-          pageSize={pageSize}
+          totalFilteredCount={totalCount}
+          pageSize={data?.meta?.limit ?? pageSize}
           onPageChange={setCurrentPage}
           entityLabel="suppliers"
         />

@@ -1,21 +1,21 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
-import { Customer } from './types';
+import { useState } from 'react';
 import { formatCurrency } from '@/lib/utils';
-import { INITIAL_CUSTOMERS } from './mockData';
 import CustomerHeader from './CustomerHeader';
 import CustomerFilters from './CustomerFilters';
 import CustomerTable from './CustomerTable';
 import Pagination from '@/components/shared/Pagination';
+import { useCustomers } from './hooks/useCustomers';
+import { useDeleteCustomer } from './hooks/useDeleteCustomer';
 
 export default function CustomersPage() {
-  const [customers, setCustomers] = useState<Customer[]>(INITIAL_CUSTOMERS);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('All Statuses');
   const [dateRange, setDateRange] = useState<string>('Last 30 Days');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+
 
   // Sorting
   const [sortField, setSortField] = useState<'companyName' | 'orders' | 'totalSpent'>('companyName');
@@ -24,50 +24,29 @@ export default function CustomersPage() {
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 4;
+
   const [showMoreFilters, setShowMoreFilters] = useState(false);
 
-  // Filter & Sort
-  const filteredCustomers = useMemo(() => {
-    return customers
-      .filter((cust) => {
-        const matchesSearch =
-          searchTerm === '' ||
-          cust.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          cust.contactName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          cust.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          cust.phone.includes(searchTerm);
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+  } = useCustomers({
+    page: currentPage,
+    limit: pageSize,
+    search: searchTerm,
+    sortField: sortField,
+    sortOrder: sortOrder,
+  });
 
-        const matchesStatus =
-          statusFilter === 'All Statuses' || cust.status === statusFilter;
+  const customers = data?.data ?? [];
 
-        return matchesSearch && matchesStatus;
-      })
-      .sort((a, b) => {
-        const valA = a[sortField];
-        const valB = b[sortField];
-
-        if (typeof valA === 'string' && typeof valB === 'string') {
-          return sortOrder === 'asc'
-            ? valA.localeCompare(valB)
-            : valB.localeCompare(valA);
-        }
-        return sortOrder === 'asc'
-          ? (valA as number) - (valB as number)
-          : (valB as number) - (valA as number);
-      });
-  }, [customers, searchTerm, statusFilter, sortField, sortOrder]);
-
-  // Paginated List
-  const totalPages = Math.max(1, Math.ceil(filteredCustomers.length / pageSize));
-  const paginatedCustomers = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return filteredCustomers.slice(start, start + pageSize);
-  }, [filteredCustomers, currentPage, pageSize]);
 
   // Selection Handlers
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedIds(paginatedCustomers.map((c) => c.id));
+      setSelectedIds(customers.map((c) => c.id));
     } else {
       setSelectedIds([]);
     }
@@ -80,28 +59,51 @@ export default function CustomersPage() {
   };
 
   const isAllSelected =
-    paginatedCustomers.length > 0 &&
-    paginatedCustomers.every((c) => selectedIds.includes(c.id));
+    customers.length > 0 &&
+    customers.every((c) => selectedIds.includes(c.id));
+
+  const {
+    mutate: deleteCustomer,
+    isPending: isDeleting
+  } = useDeleteCustomer();
 
   const handleDeleteCustomer = (id: string) => {
-    setCustomers((prev) => prev.filter((c) => c.id !== id));
-    setSelectedIds((prev) => prev.filter((item) => item !== id));
-    setActiveDropdown(null);
+    deleteCustomer(id, {
+      onSuccess: () => {
+        setSelectedIds((prev) => prev.filter((item) => item !== id));
+        setActiveDropdown(null)
+      }
+    })
   };
 
+
   const handleDeleteSelected = () => {
-    setCustomers((prev) => prev.filter((c) => !selectedIds.includes(c.id)));
-    setSelectedIds([]);
+    selectedIds.forEach((id) => {
+      deleteCustomer(id, {
+        onSuccess: () => {
+          setSelectedIds((prev) => prev.filter((item) => item !== id));
+          setActiveDropdown(null)
+        }
+      })
+    });
   };
+
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    setCurrentPage(1);
+  };
+
 
   const handleSort = (field: 'companyName' | 'orders' | 'totalSpent') => {
     if (sortField === field) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortOrder('asc');
+      setSortOrder((prev) =>
+        prev === 'asc' ? 'desc' : 'asc'
+      );
     }
   };
+
+
+
 
   return (
     <main className="space-y-6 max-w-7xl mx-auto pb-10">
@@ -126,7 +128,7 @@ export default function CustomersPage() {
 
       <div className="bg-white border border-border rounded-2xl shadow-2xs overflow-hidden">
         <CustomerTable
-          customers={paginatedCustomers}
+          customers={customers}
           selectedIds={selectedIds}
           isAllSelected={isAllSelected}
           activeDropdown={activeDropdown}
@@ -134,18 +136,18 @@ export default function CustomersPage() {
           onSelectAll={handleSelectAll}
           onSelectOne={handleSelectOne}
           onSort={handleSort}
-          onViewCustomer={() => {}}
-          onEditCustomer={() => {}}
+          onViewCustomer={() => { }}
+          onEditCustomer={() => { }}
           onDeleteCustomer={handleDeleteCustomer}
           onDeleteSelected={handleDeleteSelected}
           formatCurrency={formatCurrency}
         />
 
         <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          totalFilteredCount={filteredCustomers.length}
-          pageSize={pageSize}
+          currentPage={data?.meta.page ?? 1}
+          totalPages={data?.meta.totalPages ?? 1}
+          totalFilteredCount={data?.meta.totalCount ?? 0}
+          pageSize={data?.meta.limit ?? pageSize}
           onPageChange={setCurrentPage}
           entityLabel="customers"
         />

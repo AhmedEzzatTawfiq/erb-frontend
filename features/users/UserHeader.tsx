@@ -17,11 +17,6 @@ export default function UserHeader({ onAddUser }: UserHeaderProps) {
       actions={
         <Link
           href="/users/create"
-          onClick={(e) => {
-            if (onAddUser) {
-              // Option to trigger callback if provided
-            }
-          }}
           className="btn-primary text-xs sm:text-sm font-semibold shadow-xs hover:shadow transition-all"
         >
           <Plus className="w-4 h-4" />

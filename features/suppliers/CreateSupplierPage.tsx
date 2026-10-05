@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, ChevronDown, Check } from 'lucide-react';
 
+import { useCreateSupplier } from './hooks/useCreateSupplier';
+
 const CATEGORIES = [
   'Electronics',
   'Hardware',
@@ -18,6 +20,15 @@ const CATEGORIES = [
   'Chemicals & Metals',
 ];
 
+const PAYMENT_TERMS = [
+  'Immediate',
+  'Net 15',
+  'Net 30',
+  'Net 45',
+  'Net 60',
+  'Due on Receipt',
+];
+
 export default function CreateSupplierPage() {
   const router = useRouter();
 
@@ -27,23 +38,38 @@ export default function CreateSupplierPage() {
     contactPerson: '',
     email: '',
     phone: '',
+    address: '',
+    paymentTerms: 'Net 30',
+    status: 'Active',
   });
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [successMessage, setSuccessMessage] = useState(false);
+  const {
+    mutate: createSupplier,
+    isPending,
+    isError,
+    error,
+  } = useCreateSupplier();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
 
-    // Simulate creation delay & success redirect
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setSuccessMessage(true);
-      setTimeout(() => {
-        router.push('/suppliers');
-      }, 1000);
-    }, 400);
+    createSupplier(
+      {
+        companyName: formData.companyName,
+        contactName: formData.contactPerson,
+        email: formData.email,
+        phone: formData.phone,
+        address: formData.address,
+        paymentTerms: formData.paymentTerms,
+        status: formData.status,
+        productsSupplied: formData.category ? [formData.category] : [],
+      },
+      {
+        onSuccess: () => {
+          router.push('/suppliers');
+        },
+      }
+    );
   };
 
   return (
@@ -77,7 +103,7 @@ export default function CreateSupplierPage() {
             </h2>
             <hr className="border-t border-slate-200/80 mb-5" />
 
-            <div className="space-y-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
               <div>
                 <label className="text-xs font-semibold text-slate-600 block mb-1.5">
                   Company Name <span className="text-red-500">*</span>
@@ -95,14 +121,12 @@ export default function CreateSupplierPage() {
                 />
               </div>
 
-              {/* Category */}
               <div>
                 <label className="text-xs font-semibold text-slate-600 block mb-1.5">
-                  Category of Products Supplied <span className="text-red-500">*</span>
+                  Category of Products Supplied
                 </label>
                 <div className="relative">
                   <select
-                    required
                     value={formData.category}
                     onChange={(e) =>
                       setFormData({ ...formData, category: e.target.value })
@@ -110,7 +134,7 @@ export default function CreateSupplierPage() {
                     className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900
                      focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all appearance-none pr-10 cursor-pointer"
                   >
-                    <option value="" disabled>
+                    <option value="">
                       Select a category
                     </option>
                     {CATEGORIES.map((cat) => (
@@ -121,6 +145,42 @@ export default function CreateSupplierPage() {
                   </select>
                   <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-600 block mb-1.5">
+                  Address
+                </label>
+                <input
+                  type="text"
+                  value={formData.address}
+                  onChange={(e) =>
+                    setFormData({ ...formData, address: e.target.value })
+                  }
+                  placeholder="e.g. 123 Industrial Park, Cairo"
+                  className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm
+                   text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-600 block mb-1.5">
+                  Payment Terms
+                </label>
+                <select
+                  value={formData.paymentTerms}
+                  onChange={(e) =>
+                    setFormData({ ...formData, paymentTerms: e.target.value })
+                  }
+                  className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900
+                   focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all cursor-pointer"
+                >
+                  {PAYMENT_TERMS.map((term) => (
+                    <option key={term} value={term}>
+                      {term}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
           </div>
@@ -200,21 +260,23 @@ export default function CreateSupplierPage() {
             </button>
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isPending}
               className="px-5 py-2.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-sm font-medium rounded-lg
                shadow-xs hover:shadow transition-all cursor-pointer flex items-center gap-2 disabled:opacity-75"
             >
-              {successMessage ? (
-                <>
-                  <Check className="w-4 h-4 text-white" />
-                  <span>Saved! Redirecting...</span>
-                </>
-              ) : isSubmitting ? (
+              {isPending ? (
                 <span>Saving...</span>
               ) : (
                 <span>Save Supplier</span>
               )}
             </button>
+            {isError && (
+              <p className="text-sm text-red-600">
+                {error instanceof Error
+                  ? error.message
+                  : 'Failed to create supplier'}
+              </p>
+            )}
           </div>
         </form>
       </div>

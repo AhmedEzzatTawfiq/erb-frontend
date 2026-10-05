@@ -8,9 +8,35 @@ import {
   Star, Users, MessageSquare, Award,
 } from 'lucide-react';
 
+import { useParams } from 'next/navigation';
+import { useEmployee } from './hooks/useEmployee';
+
 export default function EmployeeProfilePage() {
   const router = useRouter();
+  const params = useParams();
+  const id = params?.id as string;
 
+  const { data, isLoading, isError } = useEmployee(id);
+  const employee = data ?? null;
+
+  if (isLoading) {
+    return <div className="p-8 text-slate-500 font-medium">Loading employee details...</div>;
+  }
+
+  if (isError || !employee) {
+    return <div className="p-8 text-red-500 font-medium">Employee not found.</div>;
+  }
+
+  const deptName =
+    typeof employee.department === 'string'
+      ? employee.department
+      : employee.department?.name || 'Operations & Logistics';
+  const pos = employee.position || employee.jopTitle || 'Employee';
+  const joined = employee.joinedDate
+    ? employee.joinedDate
+    : employee.hireDate
+    ? new Date(employee.hireDate).toLocaleDateString()
+    : 'N/A';
   return (
     <main className="space-y-6 max-w-7xl mx-auto pb-10">
       {/* Breadcrumb Navigation */}
@@ -22,16 +48,16 @@ export default function EmployeeProfilePage() {
           Employees
         </Link>
         <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
-        <span className="text-slate-700 font-semibold">Jane Cooper</span>
+        <span className="text-slate-700 font-semibold">{employee.name}</span>
       </nav>
 
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
-          Jane Cooper
+          {employee.name}
         </h1>
         <Link
-          href="/employees/emp-1/edit"
+          href={`/employees/${employee.id}/edit`}
           className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-sm font-semibold px-4 py-2 rounded-lg shadow-2xs transition-colors cursor-pointer flex items-center gap-2 self-start sm:self-auto"
         >
           <Pencil className="w-4 h-4 text-slate-500" />
@@ -44,36 +70,42 @@ export default function EmployeeProfilePage() {
         <div className="lg:col-span-1 space-y-6">
           {/* Profile Card */}
           <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-2xs text-center flex flex-col items-center">
-            <div className="w-24 h-24 rounded-full overflow-hidden mb-4 border-2 border-slate-100 shadow-xs relative group">
-              <img
-                src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=240"
-                alt="Jane Cooper"
-                className="w-full h-full object-cover"
-              />
+            <div className="w-24 h-24 rounded-full overflow-hidden mb-4 border-2 border-slate-100 shadow-xs relative group flex items-center justify-center bg-slate-100">
+              {employee.avatar ? (
+                <img
+                  src={employee.avatar}
+                  alt={employee.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-xl font-bold text-blue-700">
+                  {employee.initials || employee.name.slice(0, 2).toUpperCase()}
+                </span>
+              )}
             </div>
 
-            <h2 className="text-lg font-bold text-slate-900">Jane Cooper</h2>
+            <h2 className="text-lg font-bold text-slate-900">{employee.name}</h2>
             <p className="text-xs text-slate-500 font-medium mb-3">
-              jane.cooper@company.com
+              {employee.email}
             </p>
 
             <div className="flex items-center gap-2 justify-center flex-wrap mb-5">
               <span className="bg-slate-100 text-slate-700 text-xs font-semibold px-2.5 py-1 rounded-md border border-slate-200">
-                Senior Operations Manager
+                {pos}
               </span>
               <span className="bg-emerald-100 text-emerald-700 text-xs font-bold px-2.5 py-1 rounded-md flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
-                Active
+                {employee.status || 'Active'}
               </span>
             </div>
 
-            <button
-              type="button"
+            <a
+              href={`mailto:${employee.email}`}
               className="w-full bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-sm font-medium py-2.5 rounded-lg shadow-xs hover:shadow transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               <MessageSquare className="w-4 h-4" />
               <span>Contact Employee</span>
-            </button>
+            </a>
           </div>
 
           <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-2xs space-y-4">
@@ -86,17 +118,17 @@ export default function EmployeeProfilePage() {
                   <span>Department</span>
                 </div>
                 <span className="font-semibold text-slate-800">
-                  Operations & Logistics
+                  {deptName}
                 </span>
               </div>
 
               <div className="flex items-center justify-between py-1 border-b border-slate-100 pb-2.5">
                 <div className="flex items-center gap-2 text-slate-500 font-medium">
                   <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
-                  <span>Location</span>
+                  <span>Address</span>
                 </div>
                 <span className="font-semibold text-slate-800">
-                  New York HQ
+                  {employee.address || 'N/A'}
                 </span>
               </div>
 
@@ -106,7 +138,7 @@ export default function EmployeeProfilePage() {
                   <span>Phone</span>
                 </div>
                 <span className="font-semibold text-slate-800">
-                  +1 (555) 123-4567
+                  {employee.phone || 'N/A'}
                 </span>
               </div>
 
@@ -116,16 +148,16 @@ export default function EmployeeProfilePage() {
                   <span>Employee ID</span>
                 </div>
                 <span className="font-semibold text-slate-800">
-                  EMP-2023-040
+                  {employee.employeeId || employee.id.slice(0, 8)}
                 </span>
               </div>
 
               <div className="flex items-center justify-between py-1">
                 <div className="flex items-center gap-2 text-slate-500 font-medium">
                   <Calendar className="w-4 h-4 text-slate-400 shrink-0" />
-                  <span>Employment Type</span>
+                  <span>Joined Date</span>
                 </div>
-                <span className="font-semibold text-slate-800">Full Time</span>
+                <span className="font-semibold text-slate-800">{joined}</span>
               </div>
             </div>
           </div>
@@ -139,7 +171,7 @@ export default function EmployeeProfilePage() {
                 Joined Date
               </span>
               <span className="text-sm font-bold text-slate-900 mt-1 block">
-                Oct 12, 2027
+                {joined}
               </span>
             </div>
 

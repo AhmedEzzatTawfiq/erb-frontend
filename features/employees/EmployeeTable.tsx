@@ -21,17 +21,25 @@ interface EmployeeTableProps {
   onDeleteSelected: () => void;
 }
 
-const STATUS_STYLES: Record<EmployeeStatus, string> = {
+const STATUS_STYLES: Record<string, string> = {
   Active: 'bg-blue-50 text-blue-700 border border-blue-200',
+  active: 'bg-blue-50 text-blue-700 border border-blue-200',
   'On Leave': 'bg-slate-100 text-slate-600 border border-slate-200',
   Terminated: 'bg-red-50 text-red-600 border border-red-200',
+  inactive: 'bg-red-50 text-red-600 border border-red-200',
 };
 
-const EmployeeStatusBadge: React.FC<{ status: EmployeeStatus }> = ({ status }) => (
-  <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold ${STATUS_STYLES[status]}`}>
-    {status}
-  </span>
-);
+const EmployeeStatusBadge: React.FC<{ status: EmployeeStatus }> = ({ status }) => {
+  const displayStatus =
+    status === 'active' ? 'Active' : status === 'inactive' ? 'Terminated' : status;
+  const style = STATUS_STYLES[status] || STATUS_STYLES[displayStatus] || 'bg-slate-100 text-slate-600 border border-slate-200';
+
+  return (
+    <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold ${style}`}>
+      {displayStatus}
+    </span>
+  );
+};
 
 export default function EmployeeTable({
   employees,
@@ -139,7 +147,12 @@ export default function EmployeeTable({
             ) : (
               employees.map((employee) => {
                 const isSelected = selectedIds.includes(employee.id);
-                const isTerminated = employee.status === 'Terminated';
+                const isTerminated = employee.status === 'Terminated' || employee.status === 'inactive';
+                const departmentName =
+                  typeof employee.department === 'string'
+                    ? employee.department
+                    : employee.department?.name || 'General';
+                const pos = employee.position || employee.jopTitle || 'Employee';
 
                 return (
                   <tr
@@ -172,7 +185,7 @@ export default function EmployeeTable({
                               className={`text-xs font-bold w-full h-full flex items-center justify-center ${employee.initialsBg || 'bg-blue-100 text-blue-700'
                                 }`}
                             >
-                              {employee.initials}
+                              {employee.initials || employee.name.slice(0, 2).toUpperCase()}
                             </span>
                           )}
                         </div>
@@ -188,15 +201,15 @@ export default function EmployeeTable({
 
                     <td className="py-4 px-5">
                       <span className="text-xs font-semibold text-primary bg-blue-50 px-2 py-1 rounded-md">
-                        {employee.employeeId}
+                        {employee.employeeId || employee.id.slice(0, 8)}
                       </span>
                     </td>
 
                     <td className={`py-4 px-5 text-sm font-medium ${isTerminated ? 'text-text-secondary italic' : 'text-text-main'}`}>
-                      {employee.department}
+                      {departmentName}
                     </td>
                     <td className={`py-4 px-5 text-sm font-medium ${isTerminated ? 'text-text-secondary italic' : 'text-text-main'}`}>
-                      {employee.position}
+                      {pos}
                     </td>
 
                     <td className="py-4 px-5">
@@ -237,7 +250,7 @@ export default function EmployeeTable({
                             onClick={() => setActiveDropdown(null)}
                           />
                           <ActionDropDown
-                            href={`/customers/${employee.id}`}
+                            href={`/employees/${employee.id}`}
                             id={employee.id}
                             editLabel='Edit Employee'
                             deleteLabel='Delete Employee'

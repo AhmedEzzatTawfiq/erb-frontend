@@ -138,6 +138,12 @@ export default function ProductTable({
             ) : (
               products.map((product) => {
                 const isSelected = selectedIds.includes(product.id);
+                const categoryName = typeof product.category === 'object' ? product.category?.name : (product.category || 'General');
+                const priceVal = Number(product.unitPrice ?? product.price ?? 0);
+                const stockVal = Number(product.stockQuantity ?? product.stock ?? 0);
+                const reorderVal = Number(product.reorderLevel ?? 0);
+                const stockStatus = stockVal <= 0 ? 'Out of Stock' : (reorderVal > 0 && stockVal <= reorderVal) ? 'Low Stock' : 'In Stock';
+
                 return (
                   <tr
                     key={product.id}
@@ -180,25 +186,25 @@ export default function ProductTable({
                       </div>
                     </td>
                     <td className="py-4 px-5 text-sm font-medium text-text-main">
-                      {product.category}
+                      {categoryName}
                     </td>
                     <td className="py-4 px-5 text-right text-sm font-bold text-text-main">
-                      {formatCurrency(product.price)}
+                      {formatCurrency(priceVal)}
                     </td>
                     <td className="py-4 px-5">
-                      {product.stockStatus === 'In Stock' && (
+                      {stockStatus === 'In Stock' && (
                         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold bg-success-bg text-success-text">
                           <span className="w-2 h-2 rounded-full bg-success-text" />
-                          {product.stock} In Stock
+                          {stockVal} In Stock
                         </span>
                       )}
-                      {product.stockStatus === 'Low Stock' && (
+                      {stockStatus === 'Low Stock' && (
                         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold bg-[#FEF3C7] text-[#B45309]">
                           <span className="w-2 h-2 rounded-full bg-[#D97706]" />
-                          {product.stock} Low Stock
+                          {stockVal} Low Stock
                         </span>
                       )}
-                      {product.stockStatus === 'Out of Stock' && (
+                      {stockStatus === 'Out of Stock' && (
                         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold bg-danger-bg text-danger-text">
                           <span className="w-2 h-2 rounded-full bg-danger-text" />
                           0 Out of Stock

@@ -4,7 +4,10 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
 import { ChevronRight, ChevronDown, Check } from 'lucide-react';
-import { INITIAL_CUSTOMERS } from './mockData';
+
+import { useUpdateCustomers } from './hooks/useUpdateCustomer';
+import { useCustomers } from './hooks/useCustomers';
+import { useCustomer } from './hooks/useCustomer';
 
 const COUNTRIES = [
   'United States',
@@ -24,48 +27,60 @@ const COUNTRIES = [
 export default function EditCustomerPage() {
   const router = useRouter();
   const params = useParams();
-  const customerId = (params?.id as string) || 'cust-1';
+  const id = params.id as string;
+
+  const { data, isLoading } = useCustomer(id);
+
+  const customerData = data ?? null;
+
 
   const [formData, setFormData] = useState({
-    firstName: 'Jane',
-    lastName: 'Doe',
-    companyName: 'Acme Corp',
-    email: 'contact@acmecorp.com',
-    phone: '+1 (555) 123-4567',
-    streetAddress: '123 Business Rd, Suite 100',
-    city: 'New York',
-    country: 'United States',
+    companyName: '',
+    contactName: '',
+    email: '',
+    phone: '',
+    address: '',
+    city: '',
+    country: '',
+    taxId: '',
   });
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [successMessage, setSuccessMessage] = useState(false);
-
   useEffect(() => {
-    const existing = INITIAL_CUSTOMERS.find((c) => c.id === customerId);
-    if (existing) {
-      const parts = existing.contactName.split(' ');
-      setFormData((prev) => ({
-        ...prev,
-        firstName: parts[0] || '',
-        lastName: parts.slice(1).join(' ') || '',
-        companyName: existing.companyName,
-        email: existing.email,
-        phone: existing.phone,
-      }));
-    }
-  }, [customerId]);
+    if (!customerData) return;
+
+    setFormData({
+      companyName: customerData.companyName,
+      contactName: customerData.contactName,
+      email: customerData.email,
+      phone: customerData.phone,
+      address: customerData.address,
+      city: customerData.city,
+      country: customerData.country,
+      taxId: customerData.taxId,
+    });
+  }, [customerData]);
+
+  const {
+    mutate: updateCustomer,
+    isPending,
+    isError,
+    error
+  } = useUpdateCustomers();
+
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
 
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setSuccessMessage(true);
-      setTimeout(() => {
-        router.push('/customers');
-      }, 1000);
-    }, 400);
+    updateCustomer(
+      {
+        id,
+        data: formData,
+      }, {
+      onSuccess: () => {
+        router.push('/customers')
+      }
+    })
   };
 
   return (
@@ -119,14 +134,14 @@ export default function EditCustomerPage() {
 
               <div>
                 <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
-                  FIRST NAME
+                  CONTACT NAME
                 </label>
                 <input
                   type="text"
                   required
-                  value={formData.firstName}
+                  value={formData.contactName}
                   onChange={(e) =>
-                    setFormData({ ...formData, firstName: e.target.value })
+                    setFormData({ ...formData, contactName: e.target.value })
                   }
                   className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
                 />
@@ -134,14 +149,14 @@ export default function EditCustomerPage() {
 
               <div>
                 <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
-                  LAST NAME
+                  CONTACT NAME
                 </label>
                 <input
                   type="text"
                   required
-                  value={formData.lastName}
+                  value={formData.contactName}
                   onChange={(e) =>
-                    setFormData({ ...formData, lastName: e.target.value })
+                    setFormData({ ...formData, contactName: e.target.value })
                   }
                   className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
                 />
@@ -193,9 +208,9 @@ export default function EditCustomerPage() {
                 </label>
                 <input
                   type="text"
-                  value={formData.streetAddress}
+                  value={formData.address}
                   onChange={(e) =>
-                    setFormData({ ...formData, streetAddress: e.target.value })
+                    setFormData({ ...formData, address: e.target.value })
                   }
                   className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
                 />
@@ -251,18 +266,20 @@ export default function EditCustomerPage() {
             </button>
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isPending}
               className="px-5 py-2.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-sm font-medium rounded-lg shadow-xs hover:shadow transition-all cursor-pointer flex items-center gap-2 disabled:opacity-75"
             >
-              {successMessage ? (
-                <>
-                  <Check className="w-4 h-4 text-white" />
-                  <span>Saved! Redirecting...</span>
-                </>
-              ) : isSubmitting ? (
-                <span>Saving...</span>
+              {isPending ? (
+                <span>Updating...</span>
               ) : (
-                <span>Save Changes</span>
+                <span>Update Customer</span>
+              )}
+              {isError && (
+                <p className="text-sm text-red-600">
+                  {error instanceof Error
+                    ? error.message
+                    : 'Failed to update customer'}
+                </p>
               )}
             </button>
           </div>

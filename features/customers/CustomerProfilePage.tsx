@@ -4,30 +4,37 @@ import React from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import {
-  ChevronRight, Pencil, Mail, Building2, MapPin, Phone, Globe,
-  Calendar, ShoppingBag, DollarSign, Clock, MessageSquare,
-  ArrowUpRight, CreditCard, CheckCircle2,
+  ChevronRight, Pencil, Mail, MapPin, Phone, Globe, Calendar, ArrowUpRight
 } from 'lucide-react';
-import { INITIAL_CUSTOMERS } from './mockData';
 import { formatCurrency } from '@/lib/utils';
+import { useCustomer } from './hooks/useCustomer';
 
 export default function CustomerProfilePage() {
   const params = useParams();
-  const customerId = (params?.id as string) || 'cust-1';
 
-  const customer = INITIAL_CUSTOMERS.find((c) => c.id === customerId) || {
-    id: customerId,
-    companyName: 'Acme Corporation',
-    contactName: 'Jane Doe',
-    email: 'jane.doe@acmecorp.com',
-    phone: '+1 (555) 019-2834',
-    orders: 18,
-    totalSpent: 42850.0,
-    status: 'Active' as const,
-    initials: 'AC',
-    initialsBg: 'bg-indigo-100 text-indigo-700',
-    joinedDate: '2023-04-12',
-  };
+  const id = params.id as string;
+
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+  } = useCustomer(id);
+
+  const customer = data ?? null;
+  console.log(data, "customer")
+
+  if (isLoading) {
+    return <div>Loading customer...</div>;
+  }
+
+  if (isError || !customer) {
+    return <div>Customer not found.</div>;
+  }
+
+
+
+
 
   return (
     <main className="space-y-6 max-w-7xl mx-auto pb-10">
@@ -40,21 +47,21 @@ export default function CustomerProfilePage() {
           Customers
         </Link>
         <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
-        <span className="text-slate-700 font-semibold">{customer.companyName}</span>
+        <span className="text-slate-700 font-semibold">{customer?.companyName}</span>
       </nav>
 
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
-            {customer.companyName}
+            {customer?.companyName}
           </h1>
           <p className="text-sm text-slate-500 font-normal mt-1">
             Customer Profile & Account History
           </p>
         </div>
         <Link
-          href={`/customers/${customer.id}/edit`}
+          href={`/customers/${customer?.id}/edit`}
           className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-sm font-semibold px-4 py-2.5 rounded-lg shadow-2xs transition-colors cursor-pointer flex items-center gap-2 self-start sm:self-auto"
         >
           <Pencil className="w-4 h-4 text-slate-500" />
@@ -67,13 +74,13 @@ export default function CustomerProfilePage() {
         <div className="lg:col-span-1 space-y-6">
           {/* Profile Card */}
           <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-2xs text-center flex flex-col items-center">
-            <div className={`w-20 h-20 rounded-full mb-4 flex items-center justify-center text-xl font-bold border-2 border-slate-100 shadow-2xs ${customer.initialsBg}`}>
+            {/* <div className={`w-20 h-20 rounded-full mb-4 flex items-center justify-center text-xl font-bold border-2 border-slate-100 shadow-2xs ${customer.initialsBg}`}>
               {customer.initials}
-            </div>
+            </div> */}
 
-            <h2 className="text-lg font-bold text-slate-900">{customer.companyName}</h2>
+            <h2 className="text-lg font-bold text-slate-900">{customer?.companyName}</h2>
             <p className="text-xs text-slate-500 font-medium mb-3">
-              Primary Contact: <span className="text-slate-800 font-semibold">{customer.contactName}</span>
+              Primary Contact: <span className="text-slate-800 font-semibold">{customer?.contactName}</span>
             </p>
 
             <div className="flex items-center gap-2 justify-center mb-5">
@@ -129,7 +136,7 @@ export default function CustomerProfilePage() {
                   <Globe className="w-4 h-4 text-slate-400 shrink-0" />
                   <span>Country</span>
                 </div>
-                <span className="font-semibold text-slate-800">United States</span>
+                <span className="font-semibold text-slate-800">{customer.country}</span>
               </div>
 
               <div className="flex items-center justify-between py-1">
@@ -137,7 +144,7 @@ export default function CustomerProfilePage() {
                   <Calendar className="w-4 h-4 text-slate-400 shrink-0" />
                   <span>Joined Date</span>
                 </div>
-                <span className="font-semibold text-slate-800">{customer.joinedDate}</span>
+                <span className="font-semibold text-slate-800">{customer.createdAt}</span>
               </div>
             </div>
           </div>

@@ -3,9 +3,8 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Customer } from './types';
-import { ArrowUpDown, Building2, MoreVertical, Eye, Pencil, Trash2 } from 'lucide-react';
-import { useCustomers } from '@/hooks/useCustomers';
-import page from '@/app/page';
+import { ArrowUpDown, Building2, MoreVertical, Trash2 } from 'lucide-react';
+
 import ActionDropDown from '@/components/shared/ActionDropDown';
 
 interface CustomerTableProps {
@@ -16,7 +15,7 @@ interface CustomerTableProps {
   setActiveDropdown: (id: string | null) => void;
   onSelectAll: (checked: boolean) => void;
   onSelectOne: (id: string) => void;
-  onSort: (field: 'companyName' | 'orders' | 'totalSpent') => void;
+  onSort: (field: 'companyName') => void;
   onViewCustomer: (customer: Customer) => void;
   onEditCustomer: (customer: Customer) => void;
   onDeleteCustomer: (id: string) => void;
@@ -31,11 +30,7 @@ export default function CustomerTable({
   onDeleteCustomer, onDeleteSelected, formatCurrency,
 }: CustomerTableProps) {
 
-  const { data } = useCustomers();
 
-  // const customers = data?.data ?? [];
-
-  console.log(data)
 
   return (
     <div className="bg-white border border-border rounded-2xl shadow-2xs overflow-hidden">
@@ -82,23 +77,11 @@ export default function CustomerTable({
               <th className="py-3.5 px-5 text-xs font-semibold text-text-secondary uppercase tracking-wider">
                 CONTACT
               </th>
-              <th
-                onClick={() => onSort('orders')}
-                className="py-3.5 px-5 text-xs font-semibold text-text-secondary uppercase tracking-wider text-center cursor-pointer select-none hover:text-text-main transition-colors"
-              >
-                <div className="flex items-center justify-center gap-1.5">
-                  <span>ORDERS</span>
-                  <ArrowUpDown className="w-3 h-3 text-text-muted" />
-                </div>
+              <th className="py-3.5 px-5 text-xs font-semibold text-text-secondary uppercase tracking-wider text-center">
+                ORDERS
               </th>
-              <th
-                onClick={() => onSort('totalSpent')}
-                className="py-3.5 px-5 text-xs font-semibold text-text-secondary uppercase tracking-wider text-right cursor-pointer select-none hover:text-text-main transition-colors"
-              >
-                <div className="flex items-center justify-end gap-1.5">
-                  <span>TOTAL SPENT</span>
-                  <ArrowUpDown className="w-3 h-3 text-text-muted" />
-                </div>
+              <th className="py-3.5 px-5 text-xs font-semibold text-text-secondary uppercase tracking-wider text-right">
+                TOTAL SPENT
               </th>
               <th className="py-3.5 px-5 text-xs font-semibold text-text-secondary uppercase tracking-wider text-center">
                 STATUS

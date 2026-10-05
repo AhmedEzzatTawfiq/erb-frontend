@@ -1,19 +1,18 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
-import { Product } from './types';
+import React, { useState } from 'react';
 import { formatCurrency } from '@/lib/utils';
-import { INITIAL_PRODUCTS } from './mockData';
 import ProductHeader from './ProductHeader';
 import ProductFilters from './ProductFilters';
 import ProductTable from './ProductTable';
 import Pagination from '@/components/shared/Pagination';
+import { useProducts } from './hooks/useProducts';
+import { useDeleteProduct } from './hooks/useDeleteProduct';
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
   const [searchTerm, setSearchTerm] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('All Categories');
-  const [stockFilter, setStockFilter] = useState('Stock Status');
+  const [categoryId, setCategoryId] = useState('');
+  const [lowStock, setLowStock] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
@@ -23,52 +22,31 @@ export default function ProductsPage() {
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 4;
+  const pageSize = 6;
   const [showMoreFilters, setShowMoreFilters] = useState(false);
 
-  // Filter & Sort
-  const filteredProducts = useMemo(() => {
-    return products
-      .filter((prod) => {
-        const matchesSearch =
-          searchTerm === '' ||
-          prod.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          prod.sku.toLowerCase().includes(searchTerm.toLowerCase());
+  const {
+    data,
+    isLoading,
+    isError,
+  } = useProducts({
+    page: currentPage,
+    limit: pageSize,
+    search: searchTerm,
+    categoryId: categoryId || undefined,
+    lowStock: lowStock || undefined,
+    sortField,
+    sortOrder,
+  });
 
-        const matchesCategory =
-          categoryFilter === 'All Categories' || prod.category === categoryFilter;
-
-        const matchesStock =
-          stockFilter === 'Stock Status' || prod.stockStatus === stockFilter;
-
-        return matchesSearch && matchesCategory && matchesStock;
-      })
-      .sort((a, b) => {
-        const valA = a[sortField];
-        const valB = b[sortField];
-
-        if (typeof valA === 'string' && typeof valB === 'string') {
-          return sortOrder === 'asc'
-            ? valA.localeCompare(valB)
-            : valB.localeCompare(valA);
-        }
-        return sortOrder === 'asc'
-          ? (valA as number) - (valB as number)
-          : (valB as number) - (valA as number);
-      });
-  }, [products, searchTerm, categoryFilter, stockFilter, sortField, sortOrder]);
-
-  // Paginated List
-  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / pageSize));
-  const paginatedProducts = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return filteredProducts.slice(start, start + pageSize);
-  }, [filteredProducts, currentPage, pageSize]);
+  const products = data?.data ?? [];
+  const totalCount = data?.meta?.total ?? 0;
+  const totalPages = data?.meta?.totalPages ?? 1;
 
   // Selection Handlers
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedIds(paginatedProducts.map((p) => p.id));
+      setSelectedIds(products.map((p) => p.id));
     } else {
       setSelectedIds([]);
     }
@@ -81,18 +59,29 @@ export default function ProductsPage() {
   };
 
   const isAllSelected =
-    paginatedProducts.length > 0 &&
-    paginatedProducts.every((p) => selectedIds.includes(p.id));
+    products.length > 0 &&
+    products.every((p) => selectedIds.includes(p.id));
+
+  const { mutate: deleteProduct } = useDeleteProduct();
 
   const handleDeleteProduct = (id: string) => {
-    setProducts((prev) => prev.filter((p) => p.id !== id));
-    setSelectedIds((prev) => prev.filter((item) => item !== id));
-    setActiveDropdown(null);
+    deleteProduct(id, {
+      onSuccess: () => {
+        setSelectedIds((prev) => prev.filter((item) => item !== id));
+        setActiveDropdown(null);
+      },
+    });
   };
 
   const handleDeleteSelected = () => {
-    setProducts((prev) => prev.filter((p) => !selectedIds.includes(p.id)));
-    setSelectedIds([]);
+    selectedIds.forEach((id) => {
+      deleteProduct(id, {
+        onSuccess: () => {
+          setSelectedIds((prev) => prev.filter((item) => item !== id));
+          setActiveDropdown(null);
+        },
+      });
+    });
   };
 
   const handleSort = (field: 'name' | 'category' | 'price' | 'stock') => {
@@ -111,46 +100,61 @@ export default function ProductsPage() {
       <ProductFilters
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
-        categoryFilter={categoryFilter}
-        setCategoryFilter={setCategoryFilter}
-        stockFilter={stockFilter}
-        setStockFilter={setStockFilter}
+        categoryId={categoryId}
+        setCategoryId={setCategoryId}
+        lowStock={lowStock}
+        setLowStock={setLowStock}
         showMoreFilters={showMoreFilters}
         setShowMoreFilters={setShowMoreFilters}
         onResetFilters={() => {
           setSearchTerm('');
-          setCategoryFilter('All Categories');
-          setStockFilter('Stock Status');
+          setCategoryId('');
+          setLowStock(false);
         }}
         onPageReset={() => setCurrentPage(1)}
       />
 
       <div className="bg-white border border-border rounded-2xl shadow-2xs overflow-hidden">
-        <ProductTable
-          products={paginatedProducts}
-          selectedIds={selectedIds}
-          isAllSelected={isAllSelected}
-          activeDropdown={activeDropdown}
-          setActiveDropdown={setActiveDropdown}
-          onSelectAll={handleSelectAll}
-          onSelectOne={handleSelectOne}
-          onSort={handleSort}
-          onViewProduct={() => {}}
-          onEditProduct={() => {}}
-          onDeleteProduct={handleDeleteProduct}
-          onDeleteSelected={handleDeleteSelected}
-          formatCurrency={formatCurrency}
-        />
+        {isLoading && (
+          <div className="py-16 flex flex-col items-center gap-3 text-text-secondary">
+            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            <span className="text-sm font-medium">Loading products…</span>
+          </div>
+        )}
+        {isError && (
+          <div className="py-16 text-center text-sm text-red-500 font-medium">
+            Failed to load products. Please try again.
+          </div>
+        )}
+        {!isLoading && !isError && (
+          <>
+            <ProductTable
+              products={products}
+              selectedIds={selectedIds}
+              isAllSelected={isAllSelected}
+              activeDropdown={activeDropdown}
+              setActiveDropdown={setActiveDropdown}
+              onSelectAll={handleSelectAll}
+              onSelectOne={handleSelectOne}
+              onSort={handleSort}
+              onViewProduct={() => {}}
+              onEditProduct={() => {}}
+              onDeleteProduct={handleDeleteProduct}
+              onDeleteSelected={handleDeleteSelected}
+              formatCurrency={formatCurrency}
+            />
 
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          totalFilteredCount={filteredProducts.length}
-          pageSize={pageSize}
-          onPageChange={setCurrentPage}
-          entityLabel="products"
-        />
+            <Pagination
+              currentPage={data?.meta?.page ?? currentPage}
+              totalPages={totalPages}
+              totalFilteredCount={totalCount}
+              pageSize={data?.meta?.limit ?? pageSize}
+              onPageChange={setCurrentPage}
+              entityLabel="products"
+            />
+          </>
+        )}
       </div>
     </main>
   );
-};
+}
