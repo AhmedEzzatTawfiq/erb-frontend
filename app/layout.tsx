@@ -1,10 +1,8 @@
-
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
-import Sidebar from "@/components/layouts/Sidebar";
-import Navbar from "@/components/layouts/Navbar";
 import QueryProvider from "@/providers/QueryProvider";
+import { AuthProvider } from "@/features/auth/AuthProvider";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta",
@@ -28,18 +26,13 @@ export default function RootLayout({
       lang="en"
       className={`${plusJakartaSans.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex bg-app-bg text-text-main">
-        <Sidebar />
-        <div className="flex-1 flex flex-col min-w-0 min-h-screen">
-          <Navbar />
-          <main className="flex-1 p-6 md:p-8 overflow-y-auto">
-            <QueryProvider>
-              {children}
-            </QueryProvider>
-          </main>
-        </div>
+      <body className="min-h-full flex flex-col bg-app-bg text-text-main">
+        <QueryProvider>
+          <AuthProvider>
+            {children}
+          </AuthProvider>
+        </QueryProvider>
       </body>
     </html>
   );
 }
-

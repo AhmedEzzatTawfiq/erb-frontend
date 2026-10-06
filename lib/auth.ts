@@ -1,17 +1,26 @@
-const ACCESS_TOKEN_KEY = "accessToken";
+let accessToken: string | null = null;
 
-export function getAccessToken(){
-    if(typeof window === 'undefined') {
-        return null;
-    }
+export const setAccessToken = (token: string) => {
+  accessToken = token;
+};
 
-    return localStorage.getItem(ACCESS_TOKEN_KEY)
-}
+export const getAccessToken = () => {
+  return accessToken;
+};
 
-export function setAccessToken(token: string) {
-    localStorage.setItem(ACCESS_TOKEN_KEY, token)
-}
+export const clearAccessToken = () => {
+  accessToken = null;
+};
 
-export function clearAuth() {
-    localStorage.removeItem(ACCESS_TOKEN_KEY)
-}
+
+let onAuthExpired: (() => void) | null = null;
+
+export const setAuthExpieredHandler = (
+  callback : () => void
+) => {
+  onAuthExpired = callback;
+};
+
+export const notifyAuthExpired = () => {
+  onAuthExpired?.();
+};
