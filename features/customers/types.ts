@@ -40,9 +40,14 @@ export interface CustomerApi {
   orders: number;
   totalSpent: number;
   isDeleted: boolean;
+  status?: 'Active' | 'Inactive' | string;
+  initials?: string;
+  initialsBg?: string;
   createdAt: string;
   updatedAt: string;
 }
+
+export type Customer = CustomerApi;
 
 export interface PaginationMeta {
   page: number;

@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { User, UserStatus } from './types';
 import { ArrowUpDown, Users, Trash2, MoreVertical } from 'lucide-react';
 import ActionDropDown from '@/components/shared/ActionDropDown';
+import { useRouter } from 'next/navigation';
+import Avatar from '@/components/shared/Avatar';
 
 interface UserTableProps {
   users: User[];
@@ -46,6 +48,7 @@ export default function UserTable({
   onDeleteUser,
   onDeleteSelected,
 }: UserTableProps) {
+  const router = useRouter();
   return (
     <div>
       {/* Selected Action Bar */}
@@ -65,7 +68,7 @@ export default function UserTable({
         </div>
       )}
 
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto min-h-70">
         <table className="w-full text-left border-collapse min-w-175">
           <thead>
             <tr className="bg-app-bg border-b border-border">
@@ -139,8 +142,7 @@ export default function UserTable({
                 return (
                   <tr
                     key={user.id}
-                    className={`hover:bg-slate-50/50 transition-colors ${isSelected ? 'bg-blue-50/30' : ''
-                      }`}
+                    className={`hover:bg-slate-50/50 transition-colors ${isSelected ? 'bg-blue-50/30' : ''} ${activeDropdown === user.id ? 'relative z-30' : ''}`}
                   >
                     {/* Checkbox */}
                     <td className="py-4 px-6 text-center">
@@ -157,14 +159,18 @@ export default function UserTable({
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full border border-border overflow-hidden bg-border-subtle
                          flex items-center justify-center shrink-0">
-                          {user.avatar ? (
-                            <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
-                          ) : (
-                            <span className={`text-xs font-bold w-full h-full flex items-center justify-center
-                             ${user.initialsBg || 'bg-slate-100 text-slate-600'}`}>
-                              {user.initials}
-                            </span>
-                          )}
+                          <Link
+                            href={`/users/${user.id}`}
+                            className="text-sm font-bold text-text-main hover:text-primary transition-colors cursor-pointer block"
+                          >
+                          <Avatar
+                            avatar={user.avatar}
+                            name={user.name}
+                            initials={user.initials}
+                            initialsBg={user.initialsBg}
+                            size="lg"
+                          />
+                        </Link>
                         </div>
                         <div>
                           <Link
@@ -196,7 +202,7 @@ export default function UserTable({
                       {user.created}
                     </td>
 
-                    <td className="py-4 px-6 text-right relative">
+                    <td className={`py-4 px-6 text-right relative ${activeDropdown === user.id ? 'z-30' : ''}`}>
                       <button
                         type="button"
                         onClick={() =>

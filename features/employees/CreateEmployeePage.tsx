@@ -1,18 +1,17 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ChevronRight, ChevronDown, Check, Sparkles } from 'lucide-react';
-
+import { ChevronRight, ChevronDown, Sparkles, Trash2, AlertCircle } from 'lucide-react';
 import { useCreateEmployee } from './hooks/useCreateEmployee';
 import { useDepartments } from '../departments/hooks/useDepartments';
-
-
+import { useUploadEmployeeAvatar } from './hooks/useUploadEmployeeImage';
+import { CreateEmployeeInput, EmployeeStatus } from './types';
+import { useImageUpload } from '@/hooks/useImageUpload';
 
 export default function CreateEmployeePage() {
   const router = useRouter();
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -22,57 +21,95 @@ export default function CreateEmployeePage() {
     address: '',
     departmentId: '',
     position: '',
-    salary: 0,
+    salary: '',
     status: 'active',
   });
 
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+
+  const [createdEmployeeId, setCreatedEmployeeId] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
-    mutate: createEmployee,
+    mutateAsync: createEmployeeAsync,
     isPending,
     isError,
     error,
   } = useCreateEmployee();
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setAvatarPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+  const {
+    data: departments,
+  } = useDepartments();
+
+  const {
+    mutateAsync: uploadAvatar,
+    isPending: isAvatarUploading,
+  } = useUploadEmployeeAvatar();
+
+  //custom hook for image upload
+  const {
+    inputRef: fileInputRef,
+    file: avatarFile,
+    preview: avatarPreview,
+    error: avatarError,
+    setError: setAvatarError,
+    handleImageChange,
+    removeImage: handleRemovePhoto,
+  } = useImageUpload({
+    maxSizeMB: 5,
+  });
+
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
+    setSubmitError(null);
+    setAvatarError(null);
+
+    let employeeId = createdEmployeeId;
+
+    try {
+      if (!employeeId) {
+        const payload: CreateEmployeeInput = {
+          name: `${formData.firstName} ${formData.lastName}`.trim(),
+          email: formData.email,
+          phone: formData.phone,
+          address: formData.address,
+          departmentId: formData.departmentId,
+          jobTitle: formData.position,
+          hireDate: new Date().toISOString(),
+          salary: Number(formData.salary),
+          status: formData.status as EmployeeStatus,
+        };
+
+        const createdEmployee = await createEmployeeAsync(payload);
+
+        employeeId = createdEmployee.id;
+        setCreatedEmployeeId(employeeId);
+      }
+
+      if (avatarFile) {
+        await uploadAvatar({ employeeId, file: avatarFile });
+      }
+
+      router.push('/employees');
+
+    } catch (err) {
+      console.error('Employee submission failed:', err);
+
+      if (employeeId) {
+        setAvatarError('Employee was created, but the photo upload failed. You can retry without creating another employee.');
+      } else {
+        setSubmitError(err instanceof Error ? err.message : 'Failed to create employee. Please try again.');
+      }
+
+      setIsSubmitting(false);
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const payload = {
-      name: `${formData.firstName} ${formData.lastName}`,
-      email: formData.email,
-      phone: formData.phone,
-      address: formData.address,
-      departmentId: formData.departmentId,
-      jobTitle: formData.position,
-      hireDate: new Date().toISOString(),
-      salary: Number(formData.salary),
-      status: formData.status
-    };
-
-    createEmployee(payload, {
-      onSuccess: () => {
-        router.push('/employees');
-      },
-    });
-
-  };
-
-  const {
-    data: departments,
-    isLoading: isDepartmentsLoading
-  } = useDepartments();
 
   return (
     <main className="space-y-6 max-w-7xl mx-auto pb-10">
@@ -138,19 +175,37 @@ export default function CreateEmployeePage() {
                   type="file"
                   ref={fileInputRef}
                   onChange={handleImageChange}
-                  accept="image/png, image/jpeg, image/gif"
+                  accept="image/png, image/jpeg, image/webp"
                   className="hidden"
                 />
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-sm font-medium px-4 py-2 rounded-lg shadow-2xs transition-colors cursor-pointer"
-                >
-                  Upload Photo
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-sm font-medium px-4 py-2 rounded-lg shadow-2xs transition-colors cursor-pointer"
+                  >
+                    {avatarPreview ? 'Change Photo' : 'Upload Photo'}
+                  </button>
+                  {avatarPreview && (
+                    <button
+                      type="button"
+                      onClick={handleRemovePhoto}
+                      className="bg-white border border-red-200 hover:bg-red-50 text-red-600 text-sm font-medium px-3 py-2 rounded-lg shadow-2xs transition-colors cursor-pointer flex items-center gap-1.5"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Remove</span>
+                    </button>
+                  )}
+                </div>
                 <p className="text-xs text-slate-400 mt-2 font-normal">
-                  JPG, GIF or PNG. Max size of 800K
+                  JPG, PNG or WEBP. Max size 5MB
                 </p>
+                {avatarError && (
+                  <p className="text-xs text-red-600 mt-1.5 flex items-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{avatarError}</span>
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -304,6 +359,25 @@ export default function CreateEmployeePage() {
 
               <div>
                 <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
+                  SALARY *
+                </label>
+
+                <input
+                  type="number"
+                  required
+                  min="0"
+                  step="0.01"
+                  value={formData.salary}
+                  onChange={(e) =>
+                    setFormData({ ...formData, salary: e.target.value })
+                  }
+                  placeholder="Enter salary"
+                  className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
                   STATUS *
                 </label>
                 <div className="relative">
@@ -325,8 +399,20 @@ export default function CreateEmployeePage() {
             </div>
           </div>
 
+
+          {submitError && (
+            <p
+              role="alert"
+              className="text-sm text-red-600 flex items-center gap-2"
+            >
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              {submitError}
+            </p>
+          )}
+
           {/* Footer Actions */}
           <div className="pt-6 border-t border-slate-100 flex items-center justify-end gap-3">
+
             <button
               type="button"
               onClick={() => router.push('/employees')}
@@ -336,22 +422,16 @@ export default function CreateEmployeePage() {
             </button>
             <button
               type="submit"
-              disabled={isPending}
+              disabled={isSubmitting}
               className="px-5 py-2.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-sm font-medium rounded-lg shadow-xs hover:shadow transition-all cursor-pointer flex items-center gap-2 disabled:opacity-75"
             >
-              {isPending ? (
+              {isSubmitting ? (
                 <span>Creating...</span>
               ) : (
                 <span>Create Employee</span>
               )}
+
             </button>
-            {isError && (
-              <p className="text-sm text-red-600">
-                {error instanceof Error
-                  ? error.message
-                  : 'Failed to create employee'}
-              </p>
-            )}
           </div>
         </form>
       </div>

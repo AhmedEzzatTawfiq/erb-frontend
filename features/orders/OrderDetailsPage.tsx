@@ -190,7 +190,7 @@ export default function OrderDetailsPage() {
                 <div className="relative">
                   <div className="w-2.5 h-2.5 rounded-full bg-indigo-500 absolute -left-5.75 top-1 border-2 border-white" />
                   <h4 className="text-xs font-semibold text-slate-900">Shipped</h4>
-                  <p className="text-[11px] text-slate-400 mt-0.5">Handed to logistics carrier</p>
+                  <p className="text-[11px] text-slate-400 mt-0.5">Handed to shipping company</p>
                 </div>
               )}
 

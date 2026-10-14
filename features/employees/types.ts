@@ -9,7 +9,7 @@ export interface Employee {
   department?: Department | { id: string; name: string };
   departmentId?: string;
   position?: string;
-  jopTitle?: string;
+  jobTitle?: string;
   email: string;
   phone?: string | null;
   address?: string | null;
@@ -24,6 +24,8 @@ export interface Employee {
   updatedAt?: string;
 }
 
+export type CreateEmployeeResponse = Employee;
+
 export interface CreateEmployeeInput {
   name: string;
   email: string;
@@ -32,7 +34,7 @@ export interface CreateEmployeeInput {
   department?: string;
   departmentId?: string;
   position?: string;
-  jopTitle?: string;
+  jobTitle?: string;
   hireDate?: string;
   joinedDate?: string;
   salary?: number;
@@ -75,4 +77,8 @@ export interface EmployeesResponse {
   data: Employee[];
   meta: PaginationMeta;
 }
+
+
+
+
 

@@ -120,7 +120,7 @@ export default function CreateOrderPage() {
           Create New Order
         </h1>
         <p className="text-sm text-slate-500 font-normal mt-1">
-          Select a customer, add line items, and generate a new order in the database.
+          Select a customer, add line items, and generate a new order.
         </p>
       </div>
 

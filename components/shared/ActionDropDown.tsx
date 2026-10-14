@@ -7,7 +7,7 @@ import { Eye, Pencil, Trash2 } from 'lucide-react';
 interface ActionDropDownProps {
   href: string;
   id: string;
-  editLabel: string;
+  editLabel?: string;
   deleteLabel: string;
   setActiveDropdown: (id: string | null) => void;
   onDeleteUser: (id: string) => void;
@@ -22,7 +22,7 @@ export default function ActionDropDown({
   deleteLabel
 }: ActionDropDownProps) {
   return (
-    <div className="absolute right-5 top-12 z-20 w-40 bg-white border border-border rounded-xl shadow-lg py-1 animate-in fade-in zoom-in-95 duration-150 text-left">
+    <div className="absolute right-4 bottom-4 z-90 w-40 bg-white border border-border rounded-xl shadow-xl py-1 animate-in fade-in zoom-in-95 duration-150 text-left cursor-auto">
       <Link
         href={href}
         onClick={() => setActiveDropdown(null)}
@@ -49,7 +49,7 @@ export default function ActionDropDown({
         className="w-full px-4 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 flex items-center gap-2 text-left"
       >
         <Trash2 className="w-3.5 h-3.5 text-red-600" />
-       {deleteLabel}
+        {deleteLabel}
       </button>
     </div>
   );

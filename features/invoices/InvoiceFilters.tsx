@@ -47,7 +47,7 @@ export default function InvoiceFilters({
       <div className="flex flex-wrap items-end gap-3">
 
         <div className="min-w-35">
-          <label className="text-xs font-semibold text-text-secondary block mb-1">Status</label>
+          {/* <label className="text-xs font-semibold text-text-secondary block mb-1">Status</label> */}
           <FilterSelect
             value={statusFilter}
             onChange={(val) => {
@@ -59,7 +59,7 @@ export default function InvoiceFilters({
         </div>
 
         <div className="min-w-40">
-          <label className="text-xs font-semibold text-text-secondary block mb-1">Date Range</label>
+          {/* <label className="text-xs font-semibold text-text-secondary block mb-1">Date Range</label> */}
           <input
             type="date"
             value={dateFrom}
@@ -113,23 +113,6 @@ export default function InvoiceFilters({
                 onPageReset();
               }}
               placeholder="Invoice #, customer, or order..."
-              className="w-full px-3 py-2 text-sm bg-white border border-border rounded-xl
-               focus:outline-none focus:ring-2 focus:ring-primary/20"
-            />
-          </div>
-
-          {/* Date To */}
-          <div>
-            <label className="text-xs font-semibold text-text-secondary block mb-1">
-              Date To
-            </label>
-            <input
-              type="date"
-              value={dateTo}
-              onChange={(e) => {
-                setDateTo(e.target.value);
-                onPageReset();
-              }}
               className="w-full px-3 py-2 text-sm bg-white border border-border rounded-xl
                focus:outline-none focus:ring-2 focus:ring-primary/20"
             />

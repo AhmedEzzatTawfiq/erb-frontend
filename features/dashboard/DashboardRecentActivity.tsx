@@ -3,67 +3,18 @@
 import React from 'react';
 import Link from 'next/link';
 import { formatCurrency } from '@/lib/utils';
-
-export interface RecentActivityOrder {
-  id: string;
-  orderNumber: string;
-  customer: string;
-  amount: number;
-  status: 'Completed' | 'Processing' | 'Pending' | 'Shipped' | 'Cancelled' | 'Delivered';
-  date: string;
-}
-
-export const DEFAULT_RECENT_ACTIVITIES: RecentActivityOrder[] = [
-  {
-    id: 'act-1',
-    orderNumber: '#ORD-0921',
-    customer: 'Acme Corp',
-    amount: 4500.00,
-    status: 'Completed',
-    date: 'Oct 24, 2023',
-  },
-  {
-    id: 'act-2',
-    orderNumber: '#ORD-0922',
-    customer: 'Globex Inc',
-    amount: 1250.50,
-    status: 'Processing',
-    date: 'Oct 24, 2023',
-  },
-  {
-    id: 'act-3',
-    orderNumber: '#ORD-0923',
-    customer: 'Soylent Corp',
-    amount: 8900.00,
-    status: 'Pending',
-    date: 'Oct 23, 2023',
-  },
-  {
-    id: 'act-4',
-    orderNumber: '#ORD-0924',
-    customer: 'Initech',
-    amount: 340.00,
-    status: 'Completed',
-    date: 'Oct 23, 2023',
-  },
-  {
-    id: 'act-5',
-    orderNumber: '#ORD-0925',
-    customer: 'Umbrella Corp',
-    amount: 12400.00,
-    status: 'Shipped',
-    date: 'Oct 22, 2023',
-  },
-];
+import { RecentActivityOrder, ActivityStatus } from './types';
 
 interface DashboardRecentActivityProps {
   activities?: RecentActivityOrder[];
+  isLoading?: boolean;
 }
 
 export default function DashboardRecentActivity({
-  activities = DEFAULT_RECENT_ACTIVITIES,
+  activities = [],
+  isLoading = false,
 }: DashboardRecentActivityProps) {
-  const getStatusBadge = (status: RecentActivityOrder['status']) => {
+  const getStatusBadge = (status: ActivityStatus) => {
     switch (status) {
       case 'Completed':
       case 'Delivered':
@@ -107,37 +58,57 @@ export default function DashboardRecentActivity({
             </tr>
           </thead>
           <tbody className="divide-y divide-border-subtle">
-            {activities.slice(0, 5).map((activity) => (
-              <tr
-                key={activity.id}
-                className="hover:bg-slate-50/50 transition-colors"
-              >
-                <td className="py-3.5 px-5 font-semibold text-text-main">
-                  {activity.orderNumber}
-                </td>
-                <td className="py-3.5 px-5 font-medium text-text-main">
-                  {activity.customer}
-                </td>
-                <td className="py-3.5 px-5 text-text-main font-medium">
-                  {formatCurrency(activity.amount)}
-                </td>
-                <td className="py-3.5 px-5">
-                  <span
-                    className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-semibold border ${getStatusBadge(
-                      activity.status
-                    )}`}
-                  >
-                    {activity.status}
-                  </span>
-                </td>
-                <td className="py-3.5 px-5 text-text-secondary text-sm">
-                  {activity.date}
+            {isLoading ? (
+              Array.from({ length: 5 }).map((_, idx) => (
+                <tr key={idx} className="animate-pulse">
+                  <td className="py-3.5 px-5"><div className="h-4 w-20 bg-slate-200 rounded" /></td>
+                  <td className="py-3.5 px-5"><div className="h-4 w-28 bg-slate-200 rounded" /></td>
+                  <td className="py-3.5 px-5"><div className="h-4 w-16 bg-slate-200 rounded" /></td>
+                  <td className="py-3.5 px-5"><div className="h-5 w-20 bg-slate-200 rounded-md" /></td>
+                  <td className="py-3.5 px-5"><div className="h-4 w-24 bg-slate-200 rounded" /></td>
+                </tr>
+              ))
+            ) : activities.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="py-8 text-center text-text-muted text-sm font-medium">
+                  No recent activities found.
                 </td>
               </tr>
-            ))}
+            ) : (
+              activities.slice(0, 5).map((activity) => (
+                <tr
+                  key={activity.id}
+                  className="hover:bg-slate-50/50 transition-colors"
+                >
+                  <td className="py-3.5 px-5 font-semibold text-text-main">
+                    <Link href={`/orders`} className="hover:text-primary transition-colors">
+                      {activity.orderNumber}
+                    </Link>
+                  </td>
+                  <td className="py-3.5 px-5 font-medium text-text-main">
+                    {activity.customer}
+                  </td>
+                  <td className="py-3.5 px-5 text-text-main font-medium">
+                    {formatCurrency(activity.amount)}
+                  </td>
+                  <td className="py-3.5 px-5">
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-semibold border ${getStatusBadge(
+                        activity.status
+                      )}`}
+                    >
+                      {activity.status}
+                    </span>
+                  </td>
+                  <td className="py-3.5 px-5 text-text-secondary text-sm">
+                    {activity.date}
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
     </div>
   );
-};
+}

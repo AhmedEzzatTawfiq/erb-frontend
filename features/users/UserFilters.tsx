@@ -65,7 +65,7 @@ export default function UserFilters({
           onPageReset();
         }}
         options={ROLE_OPTIONS}
-        label="Role"
+        // label="Role"
       />
 
       <FilterSelect
@@ -75,7 +75,7 @@ export default function UserFilters({
           onPageReset();
         }}
         options={STATUS_OPTIONS}
-        label="Status"
+        // label="Status"
       />
 
       {hasActiveFilter && (

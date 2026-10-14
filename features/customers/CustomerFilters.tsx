@@ -65,14 +65,14 @@ export default function CustomerFilters({
             onPageReset();
           }}
           options={STATUS_OPTIONS}
-          label="Status"
+        // label="Status"
         />
 
         <FilterSelect
           value={dateRange}
           onChange={setDateRange}
           options={DATE_RANGE_OPTIONS}
-          label="Date Range"
+          // label="Date Range"
           leadingIcon={<Calendar className="w-4 h-4" />}
         />
 
@@ -81,11 +81,10 @@ export default function CustomerFilters({
           <button
             type="button"
             onClick={() => setShowMoreFilters(!showMoreFilters)}
-            className={`w-full py-2.5 px-4 bg-white border rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all shadow-2xs ${
-              showMoreFilters
+            className={`w-full py-2.5 px-4 bg-white border rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all shadow-2xs ${showMoreFilters
                 ? 'border-primary text-primary bg-blue-50/50'
                 : 'border-border text-text-secondary hover:bg-slate-50'
-            }`}
+              }`}
           >
             <Filter className="w-4 h-4 text-text-secondary" />
             <span>More Filters</span>

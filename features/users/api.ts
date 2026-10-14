@@ -6,6 +6,25 @@ export async function createUser(data: CreateUserInput) {
   return response.data;
 }
 
+export async function uploadUserImage(userId: string, file: File) {
+  const formData = new FormData();
+
+  formData.append('file', file);
+  formData.append('userId', userId);
+
+  const { data } = await api.post(
+    `/users/${userId}/avatar`,
+    formData,
+  );
+
+  return data;
+}
+
+export async function deleteUserAvatar(userId: string) {
+  const response = await api.delete(`/users/${userId}/avatar`);
+  return response.data;
+}
+
 export async function updateUser({
   id,
   data,
@@ -39,4 +58,4 @@ export async function getUser(id: string): Promise<User> {
 
 export async function deleteUser(id: string): Promise<void> {
   await api.delete(`/users/${id}`);
-}
+}

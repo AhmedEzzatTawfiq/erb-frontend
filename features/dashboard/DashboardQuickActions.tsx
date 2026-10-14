@@ -2,17 +2,15 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { UserPlus, FilePlus, ShoppingBag } from 'lucide-react';
+import { UserPlus, ShoppingBag } from 'lucide-react';
 
 interface DashboardQuickActionsProps {
   onAddUser?: () => void;
-  onCreateInvoice?: () => void;
   onCreateOrder?: () => void;
 }
 
 export default function DashboardQuickActions({
   onAddUser,
-  onCreateInvoice,
   onCreateOrder,
 }: DashboardQuickActionsProps) {
   return (
@@ -27,15 +25,6 @@ export default function DashboardQuickActions({
         >
           <UserPlus className="w-4 h-4 text-text-secondary" />
           <span>Add User</span>
-        </Link>
-
-        <Link
-          href="/invoices/create"
-          onClick={() => { if (onCreateInvoice) onCreateInvoice(); }}
-          className="w-full py-2.5 px-4 border border-border rounded-lg text-sm font-semibold text-text-main hover:bg-[#F8FAFC] flex items-center justify-center gap-2 transition-colors cursor-pointer"
-        >
-          <FilePlus className="w-4 h-4 text-text-secondary" />
-          <span>Create Invoice</span>
         </Link>
 
         <Link
@@ -58,3 +47,4 @@ export default function DashboardQuickActions({
     </div>
   );
 }
+

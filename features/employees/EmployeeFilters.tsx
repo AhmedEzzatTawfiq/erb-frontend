@@ -3,29 +3,19 @@
 import React from 'react';
 import FilterSelect from '@/components/shared/FilterSelect';
 import SearchInput from '@/components/shared/SearchInput';
+import { useDepartments } from '../departments/hooks/useDepartments';
 
 interface EmployeeFiltersProps {
   searchTerm: string;
   setSearchTerm: (term: string) => void;
-  departmentFilter: string;
-  setDepartmentFilter: (dept: string) => void;
+  departmentId: string;
+  setDepartmentId: (id: string) => void;
   statusFilter: string;
   setStatusFilter: (status: string) => void;
   onPageReset: () => void;
   onResetFilters: () => void;
 }
 
-const DEPARTMENT_OPTIONS = [
-  { label: 'All Departments', value: 'All Departments' },
-  { label: 'Engineering', value: 'Engineering' },
-  { label: 'Sales', value: 'Sales' },
-  { label: 'Finance', value: 'Finance' },
-  { label: 'Human Resources', value: 'Human Resources' },
-  { label: 'Marketing', value: 'Marketing' },
-  { label: 'Operations', value: 'Operations' },
-  { label: 'Design', value: 'Design' },
-  { label: 'Legal', value: 'Legal' },
-];
 
 const STATUS_OPTIONS = [
   { label: 'All Statuses', value: 'All Statuses' },
@@ -37,13 +27,16 @@ const STATUS_OPTIONS = [
 export default function EmployeeFilters({
   searchTerm,
   setSearchTerm,
-  departmentFilter,
-  setDepartmentFilter,
+  departmentId,
+  setDepartmentId,
   statusFilter,
   setStatusFilter,
   onPageReset,
   onResetFilters,
 }: EmployeeFiltersProps) {
+
+  const { data: departments } = useDepartments();
+
   return (
     <div className="bg-white border border-border rounded-2xl px-4 py-3 md:px-5 shadow-2xs">
       <div className="flex flex-wrap items-center gap-3">
@@ -61,13 +54,15 @@ export default function EmployeeFilters({
         </div>
 
         <FilterSelect
-          value={departmentFilter}
+          value={departmentId}
           onChange={(val) => {
-            setDepartmentFilter(val);
+            setDepartmentId(val);
             onPageReset();
           }}
-          options={DEPARTMENT_OPTIONS}
-          label="Department"
+          options={[
+            { label: 'All Departments', value: '' },
+            ...(departments?.map((d) => ({ label: d.name, value: d.id })) ?? []),
+          ]}
         />
 
         <FilterSelect
@@ -77,11 +72,11 @@ export default function EmployeeFilters({
             onPageReset();
           }}
           options={STATUS_OPTIONS}
-          label="Status"
+          // label="Status"
         />
 
         {/* Reset */}
-        {(searchTerm || departmentFilter !== 'All Departments' || statusFilter !== 'All Statuses') && (
+        {(searchTerm || departmentId || statusFilter !== 'All Statuses') && (
           <button
             type="button"
             onClick={onResetFilters}

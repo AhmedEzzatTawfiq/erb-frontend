@@ -14,11 +14,9 @@ import {
   LogOut,
   RefreshCw,
   Clock,
-  Sparkles,
   AlertCircle,
   Copy,
   Check,
-  Smartphone,
   Laptop,
   Globe,
 } from "lucide-react";
@@ -109,11 +107,11 @@ export default function ProfilePage() {
 
   const initials = user.name
     ? user.name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2)
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2)
     : "U";
 
   const roleStyles = {
@@ -147,7 +145,7 @@ export default function ProfilePage() {
           Dashboard
         </Link>
         <span>/</span>
-        <span className="text-text-main font-semibold">User Profile</span>
+        <span className="text-text-main font-semibold">My Profile</span>
       </nav>
 
       {/* Top Header Card */}
@@ -237,11 +235,10 @@ export default function ProfilePage() {
           <div className="bg-white border border-border rounded-xl p-2 shadow-2xs space-y-1">
             <button
               onClick={() => setActiveTab("general")}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                activeTab === "general"
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-xs font-semibold transition-all cursor-pointer ${activeTab === "general"
                   ? "bg-primary-light text-primary shadow-2xs"
                   : "text-text-secondary hover:bg-border-subtle hover:text-text-main font-medium"
-              }`}
+                }`}
             >
               <UserIcon className="w-4 h-4 shrink-0" />
               <span>General Details</span>
@@ -249,11 +246,10 @@ export default function ProfilePage() {
 
             <button
               onClick={() => setActiveTab("security")}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                activeTab === "security"
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-xs font-semibold transition-all cursor-pointer ${activeTab === "security"
                   ? "bg-primary-light text-primary shadow-2xs"
                   : "text-text-secondary hover:bg-border-subtle hover:text-text-main font-medium"
-              }`}
+                }`}
             >
               <Key className="w-4 h-4 shrink-0" />
               <span>Security & Sessions</span>
@@ -261,11 +257,10 @@ export default function ProfilePage() {
 
             <button
               onClick={() => setActiveTab("permissions")}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                activeTab === "permissions"
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-xs font-semibold transition-all cursor-pointer ${activeTab === "permissions"
                   ? "bg-primary-light text-primary shadow-2xs"
                   : "text-text-secondary hover:bg-border-subtle hover:text-text-main font-medium"
-              }`}
+                }`}
             >
               <Shield className="w-4 h-4 shrink-0" />
               <span>Role Permissions</span>
@@ -273,11 +268,10 @@ export default function ProfilePage() {
 
             <button
               onClick={() => setActiveTab("activity")}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                activeTab === "activity"
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-xs font-semibold transition-all cursor-pointer ${activeTab === "activity"
                   ? "bg-primary-light text-primary shadow-2xs"
                   : "text-text-secondary hover:bg-border-subtle hover:text-text-main font-medium"
-              }`}
+                }`}
             >
               <Clock className="w-4 h-4 shrink-0" />
               <span>Activity Log</span>
@@ -304,11 +298,6 @@ export default function ProfilePage() {
                   <CheckCircle2 className="w-3.5 h-3.5" />
                   Verified
                 </span>
-              </div>
-
-              <div className="flex items-center justify-between pb-2 border-b border-border-subtle">
-                <span className="text-text-secondary">Auth Provider</span>
-                <span className="font-semibold text-text-main">JWT Bearer</span>
               </div>
 
               <div className="flex items-center justify-between">
@@ -355,14 +344,15 @@ export default function ProfilePage() {
                   {/* Name Input */}
                   <div className="space-y-2">
                     <label className="block text-xs font-semibold text-text-main">
-                      Full Name <span className="text-red-500">*</span>
+                      Full Name
                     </label>
                     <div className="relative">
                       <input
                         type="text"
+                        disabled
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        className="w-full pl-9 pr-4 py-2.5 text-sm bg-white border border-border rounded-lg placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                        className="w-full pl-9 pr-4 py-2.5 text-sm bg-slate-50 border border-border rounded-lg text-text-secondary cursor-not-allowed"
                         placeholder="Enter full name"
                         required
                       />
@@ -424,7 +414,7 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Form Action */}
-                <div className="flex items-center justify-end gap-3 pt-4">
+                {/* <div className="flex items-center justify-end gap-3 pt-4">
                   <button
                     type="submit"
                     disabled={isSaving}
@@ -442,7 +432,7 @@ export default function ProfilePage() {
                       </>
                     )}
                   </button>
-                </div>
+                </div> */}
               </form>
             </div>
           )}
@@ -486,14 +476,14 @@ export default function ProfilePage() {
                   <div className="p-4 bg-slate-50 border border-border rounded-xl space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-bold text-text-main">
-                        Token Refresh Cookie
+                        Security
                       </span>
-                      <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-semibold">
-                        HttpOnly
+                      <span className="text-xs bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-semibold">
+                        <Lock className="w-3 h-3 text-emerald-600" />
                       </span>
                     </div>
                     <p className="text-xs text-text-secondary">
-                      Session tokens are protected against XSS attacks using secure HttpOnly cookies.
+                      Your sessions are protected against XSS attacks using secure HttpOnly cookies.
                     </p>
                   </div>
                 </div>
@@ -630,19 +620,25 @@ export default function ProfilePage() {
                 </div>
 
                 <div className="p-4 bg-slate-50/70 border border-border rounded-xl flex items-start gap-3">
-                  {user.role === "admin" || user.role === "manager" ? (
+                  {/* {user.role === "admin" || user.role === "manager" ? (
                     <CheckCircle2 className="w-5 h-5 text-emerald-600 mt-0.5 shrink-0" />
                   ) : (
                     <Lock className="w-5 h-5 text-slate-400 mt-0.5 shrink-0" />
-                  )}
+                  )} */}
+
+                  <CheckCircle2 className="w-5 h-5 text-emerald-600 mt-0.5 shrink-0" />
+
                   <div>
                     <h4 className="text-xs font-bold text-text-main">
                       Customer & Supplier Data
                     </h4>
-                    <p className="text-[11px] text-text-secondary mt-0.5">
+                    {/* <p className="text-[11px] text-text-secondary mt-0.5">
                       {user.role === "employee"
                         ? "Restricted view permissions."
                         : "Management and edit access to customer files and suppliers."}
+                    </p> */}
+                    <p className="text-[11px] text-text-secondary mt-0.5">
+                      Management and edit access to customer files and suppliers.
                     </p>
                   </div>
                 </div>

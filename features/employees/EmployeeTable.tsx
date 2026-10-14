@@ -1,10 +1,13 @@
 'use client';
 
 import React from 'react';
-import Link from 'next/link';
 import { Employee, EmployeeStatus } from './types';
-import { ArrowUpDown, Users, MoreVertical, Eye, Pencil, Trash2 } from 'lucide-react';
+import { ArrowUpDown, Users, MoreVertical, Trash2 } from 'lucide-react';
 import ActionDropDown from '@/components/shared/ActionDropDown';
+import Avatar from '@/components/shared/Avatar';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+
 
 interface EmployeeTableProps {
   employees: Employee[];
@@ -22,16 +25,12 @@ interface EmployeeTableProps {
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  Active: 'bg-blue-50 text-blue-700 border border-blue-200',
   active: 'bg-blue-50 text-blue-700 border border-blue-200',
-  'On Leave': 'bg-slate-100 text-slate-600 border border-slate-200',
-  Terminated: 'bg-red-50 text-red-600 border border-red-200',
   inactive: 'bg-red-50 text-red-600 border border-red-200',
 };
 
 const EmployeeStatusBadge: React.FC<{ status: EmployeeStatus }> = ({ status }) => {
-  const displayStatus =
-    status === 'active' ? 'Active' : status === 'inactive' ? 'Terminated' : status;
+  const displayStatus = status === 'active' ? 'Active' : status === 'inactive' ? 'Terminated' : status;
   const style = STATUS_STYLES[status] || STATUS_STYLES[displayStatus] || 'bg-slate-100 text-slate-600 border border-slate-200';
 
   return (
@@ -55,6 +54,7 @@ export default function EmployeeTable({
   onDeleteEmployee,
   onDeleteSelected,
 }: EmployeeTableProps) {
+  const router = useRouter();
   return (
     <div className="bg-white border border-border rounded-2xl shadow-2xs overflow-hidden">
       {/* Selected Action Bar */}
@@ -95,15 +95,7 @@ export default function EmployeeTable({
                   <ArrowUpDown className="w-3 h-3 text-text-muted" />
                 </div>
               </th>
-              <th
-                onClick={() => onSort('employeeId')}
-                className="py-3.5 px-5 text-xs font-semibold text-text-secondary uppercase tracking-wider cursor-pointer select-none hover:text-text-main transition-colors"
-              >
-                <div className="flex items-center gap-1.5">
-                  <span>ID</span>
-                  <ArrowUpDown className="w-3 h-3 text-text-muted" />
-                </div>
-              </th>
+
               <th
                 onClick={() => onSort('department')}
                 className="py-3.5 px-5 text-xs font-semibold text-text-secondary uppercase tracking-wider cursor-pointer select-none hover:text-text-main transition-colors"
@@ -147,12 +139,13 @@ export default function EmployeeTable({
             ) : (
               employees.map((employee) => {
                 const isSelected = selectedIds.includes(employee.id);
-                const isTerminated = employee.status === 'Terminated' || employee.status === 'inactive';
+                const isTerminated = employee.status === 'inactive';
                 const departmentName =
                   typeof employee.department === 'string'
                     ? employee.department
-                    : employee.department?.name || 'General';
-                const pos = employee.position || employee.jopTitle || 'Employee';
+                    : employee.department?.name;
+                    
+                const pos = employee.jobTitle || 'Employee';
 
                 return (
                   <tr
@@ -172,37 +165,30 @@ export default function EmployeeTable({
 
                     {/* Employee */}
                     <td className="py-4 px-5">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full border border-border overflow-hidden bg-slate-100 flex items-center justify-center shrink-0 shadow-2xs">
-                          {employee.avatar ? (
-                            <img
-                              src={employee.avatar}
-                              alt={employee.name}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <span
-                              className={`text-xs font-bold w-full h-full flex items-center justify-center ${employee.initialsBg || 'bg-blue-100 text-blue-700'
-                                }`}
-                            >
-                              {employee.initials || employee.name.slice(0, 2).toUpperCase()}
-                            </span>
-                          )}
+                      <Link
+                        href={`/employees/${employee.id}`}
+                        className="flex items-center gap-3 group"
+                      >
+
+                        <div className="w-12 h-12 rounded-full border border-border overflow-hidden bg-slate-100 flex items-center justify-center shrink-0 shadow-2xs">
+                          <Avatar
+                            avatar={employee.avatar}
+                            name={employee.name}
+                            initials={employee.initials}
+                            initialsBg={employee.initialsBg}
+                            size="lg"
+                          />
                         </div>
-                        <Link
-                          href={`/employees/${employee.id}`}
-                          className={`text-sm font-bold hover:text-primary transition-colors cursor-pointer ${isTerminated ? 'line-through text-text-secondary' : 'text-text-main'
+
+                        <span
+                          className={`text-sm font-bold transition-colors ${isTerminated
+                            ? 'line-through text-text-secondary'
+                            : 'text-text-main group-hover:text-primary'
                             }`}
                         >
                           {employee.name}
-                        </Link>
-                      </div>
-                    </td>
-
-                    <td className="py-4 px-5">
-                      <span className="text-xs font-semibold text-primary bg-blue-50 px-2 py-1 rounded-md">
-                        {employee.employeeId || employee.id.slice(0, 8)}
-                      </span>
+                        </span>
+                      </Link>
                     </td>
 
                     <td className={`py-4 px-5 text-sm font-medium ${isTerminated ? 'text-text-secondary italic' : 'text-text-main'}`}>

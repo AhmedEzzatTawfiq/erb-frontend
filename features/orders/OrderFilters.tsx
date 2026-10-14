@@ -69,14 +69,14 @@ export default function OrderFilters({
             onPageReset();
           }}
           options={STATUS_OPTIONS}
-          label="Status"
+          // label="Status"
         />
 
         <FilterSelect
           value={dateRange}
           onChange={setDateRange}
           options={DATE_RANGE_OPTIONS}
-          label="Date Range"
+          // label="Date Range"
         />
 
         <div className="flex-1" />

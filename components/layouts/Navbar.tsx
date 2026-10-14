@@ -3,10 +3,14 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, Bell, HelpCircle, User as UserIcon, LogOut, Settings, ShieldCheck, ChevronDown } from "lucide-react";
+import { Search, Bell, HelpCircle, User as UserIcon, LogOut, Settings, ShieldCheck, ChevronDown, Menu } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthProvider";
 
-export default function Navbar() {
+interface NavbarProps {
+  onToggleMobileMenu?: () => void;
+}
+
+export default function Navbar({ onToggleMobileMenu }: NavbarProps = {}) {
   const router = useRouter();
   const { user, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
@@ -40,10 +44,21 @@ export default function Navbar() {
 
   return (
     <header className="w-full h-16 bg-white/70 backdrop-blur-md border-b border-border px-6 md:px-8 flex items-center justify-between sticky top-0 z-30">
-      <div className="hidden md:flex items-center gap-2 text-xs text-text-muted font-medium">
-        <span>Dashboard</span>
-        <span>/</span>
-        <span className="text-text-main">ERP Core</span>
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={onToggleMobileMenu}
+          className="p-2 -ml-2 text-text-secondary hover:text-text-main hover:bg-border-subtle rounded-lg md:hidden transition-colors"
+          aria-label="Toggle navigation menu"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+
+        <div className="hidden md:flex items-center gap-2 text-xs text-text-muted font-medium">
+          <span>Dashboard</span>
+          <span>/</span>
+          <span className="text-text-main">ERP Core</span>
+        </div>
       </div>
 
       <div className="flex-1 max-w-md mx-auto md:mx-0 md:ml-auto md:mr-auto">
@@ -58,22 +73,22 @@ export default function Navbar() {
       </div>
 
       <div className="flex items-center gap-3">
-        <button
+        {/* <button
           type="button"
           aria-label="Notifications"
           className="p-2 text-text-secondary hover:text-text-main hover:bg-border-subtle rounded-full transition-colors relative"
         >
           <Bell className="w-5 h-5" />
           <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full ring-2 ring-white" />
-        </button>
+        </button> */}
 
-        <button
+        {/* <button
           type="button"
           aria-label="Help"
           className="p-2 text-text-secondary hover:text-text-main hover:bg-border-subtle rounded-full transition-colors hidden sm:block"
         >
           <HelpCircle className="w-5 h-5" />
-        </button>
+        </button> */}
 
         {/* User Profile Dropdown Menu */}
         <div className="pl-1 relative" ref={dropdownRef}>
@@ -153,7 +168,7 @@ export default function Navbar() {
                   className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-danger-text hover:bg-red-50 transition-colors cursor-pointer"
                 >
                   <LogOut className="w-4 h-4 text-red-500" />
-                  <span>Sign Out</span>
+                  <span>Logout</span>
                 </button>
               </div>
             </div>

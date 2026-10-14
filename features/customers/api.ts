@@ -10,6 +10,25 @@ export async function createCustomer(
   return response.data;
 }
 
+export async function uploadCustomerImage(customerId: string, file: File) {
+  const formData = new FormData();
+
+  formData.append('file', file);
+  formData.append('customerId', customerId);
+
+  const { data } = await api.post(
+    `/customers/${customerId}/avatar`,
+    formData,
+  );
+
+  return data;
+}
+
+export async function deleteCustomerAvatar(customerId: string) {
+  const response = await api.delete(`/customers/${customerId}/avatar`);
+  return response.data;
+}
+
 
 export async function updateCustomer(
   {

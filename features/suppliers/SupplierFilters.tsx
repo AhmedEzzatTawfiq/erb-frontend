@@ -73,7 +73,7 @@ export default function SupplierFilters({
             onPageReset();
           }}
           options={STATUS_OPTIONS}
-          label="Status"
+        // label="Status"
         />
 
         {/* Category Select */}
@@ -84,7 +84,7 @@ export default function SupplierFilters({
             onPageReset();
           }}
           options={CATEGORY_OPTIONS}
-          label="Category"
+          // label="Category"
         />
 
         {/* More Filters */}

@@ -1,7 +1,7 @@
 import { api } from '@/lib/axios';
-import { EmployeesResponse, CreateEmployeeInput, GetEmployeesParams, Employee } from './types';
+import { EmployeesResponse, CreateEmployeeInput, GetEmployeesParams, Employee, CreateEmployeeResponse } from './types';
 
-export async function createEmployee(data: CreateEmployeeInput) {
+export async function createEmployee(data: CreateEmployeeInput): Promise<CreateEmployeeResponse> {
   const response = await api.post('/employees', data);
   return response.data;
 }
@@ -13,7 +13,26 @@ export async function updateEmployee({
   id: string;
   data: CreateEmployeeInput;
 }) {
-  const response = await api.put(`/employees/${id}`, data).catch(() => api.patch(`/employees/${id}`, data));
+  const response = await api.put(`/employees/${id}`, data);
+  return response.data;
+}
+
+export async function uploadEmployeeImage(employeeId: string, file: File) {
+  const formData = new FormData();
+
+  formData.append('file', file);
+  formData.append('employeeId', employeeId);
+
+  const { data } = await api.post(
+    `/employees/${employeeId}/avatar`,
+    formData,
+  );
+
+  return data;
+}
+
+export async function deleteEmployeeAvatar(employeeId: string) {
+  const response = await api.delete(`/employees/${employeeId}/avatar`);
   return response.data;
 }
 

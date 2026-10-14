@@ -12,6 +12,8 @@ import {
   Trash2
 } from 'lucide-react';
 import ActionDropDown from '@/components/shared/ActionDropDown';
+import { useRouter } from 'next/navigation';
+import Avatar from '@/components/shared/Avatar';
 
 interface ProductTableProps {
   products: Product[];
@@ -42,6 +44,7 @@ export default function ProductTable({
   onDeleteSelected,
   formatCurrency,
 }: ProductTableProps) {
+  const router = useRouter();
   return (
     <div className="bg-white border border-border rounded-2xl shadow-2xs overflow-hidden">
       {/* Selected Action Bar */}
@@ -161,16 +164,19 @@ export default function ProductTable({
                     </td>
 
                     <td className="py-4 px-3">
-                      <div className="w-12 h-12 rounded-xl border border-border overflow-hidden bg-slate-50 flex items-center justify-center shrink-0 shadow-2xs">
-                        {product.image ? (
-                          <img
-                            src={product.image}
-                            alt={product.name}
-                            className="w-full h-full object-cover"
+                      <div className="w-10 h-10 rounded-xl border border-border overflow-hidden bg-slate-50 flex items-center justify-center shrink-0 shadow-2xs">
+                        <Link
+                          href={`/products/${product.id}`}
+                          className="text-sm font-bold text-text-main hover:text-primary transition-colors cursor-pointer block"
+                        >
+                          <Avatar
+                            avatar={product.image}
+                            name={product.name}
+                            initials={product.initials}
+                            initialsBg={product.initialsBg}
+                            size="lg"
                           />
-                        ) : (
-                          <Package className="w-6 h-6 text-text-muted" />
-                        )}
+                        </Link>
                       </div>
                     </td>
 
@@ -180,10 +186,10 @@ export default function ProductTable({
                         className="text-sm font-bold text-text-main hover:text-primary transition-colors cursor-pointer block"
                       >
                         {product.name}
+                        <div className="text-xs text-text-secondary mt-0.5 font-medium">
+                          SKU: {product.sku}
+                        </div>
                       </Link>
-                      <div className="text-xs text-text-secondary mt-0.5 font-medium">
-                        SKU: {product.sku}
-                      </div>
                     </td>
                     <td className="py-4 px-5 text-sm font-medium text-text-main">
                       {categoryName}
@@ -214,13 +220,6 @@ export default function ProductTable({
 
                     <td className="py-4 px-5 text-right relative">
                       <div className="flex items-center justify-end gap-1">
-                        <Link
-                          href={`/products/${product.id}/edit`}
-                          className="p-1.5 rounded-lg text-text-muted hover:text-text-main hover:bg-slate-100 transition-colors"
-                          aria-label="Edit"
-                        >
-                          <Pencil className="w-4 h-4" />
-                        </Link>
 
                         <button
                           type="button"
@@ -264,3 +263,4 @@ export default function ProductTable({
     </div>
   );
 };
+

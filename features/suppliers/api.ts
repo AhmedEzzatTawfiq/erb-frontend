@@ -6,6 +6,25 @@ export async function createSupplier(data: CreateSupplierInput): Promise<Supplie
   return response.data;
 }
 
+export async function uploadSupplierImage(supplierId: string, file: File) {
+  const formData = new FormData();
+
+  formData.append('file', file);
+  formData.append('supplierId', supplierId);
+
+  const { data } = await api.post(
+    `/suppliers/${supplierId}/avatar`,
+    formData,
+  );
+
+  return data;
+}
+
+export async function deleteSupplierAvatar(supplierId: string) {
+  const response = await api.delete(`/suppliers/${supplierId}/avatar`);
+  return response.data;
+}
+
 export async function updateSupplier({
   id,
   data,

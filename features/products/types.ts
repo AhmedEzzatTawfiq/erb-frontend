@@ -24,6 +24,8 @@ export interface Product {
   stockStatus?: ProductStockStatus;
   image?: string | null;
   description?: string | null;
+  initials?: string;
+  initialsBg?: string;
   createdAt?: string;
   updatedAt?: string;
 }

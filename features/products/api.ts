@@ -6,6 +6,25 @@ export async function createProduct(data: CreateProductInput): Promise<Product> 
   return response.data;
 }
 
+export async function uploadProductImage(productId: string, file: File) {
+  const formData = new FormData();
+
+  formData.append('file', file);
+  formData.append('productId', productId);
+
+  const { data } = await api.post(
+    `/products/${productId}/avatar`,
+    formData,
+  );
+
+  return data;
+}
+
+export async function deleteProductAvatar(productId: string) {
+  const response = await api.delete(`/products/${productId}/avatar`);
+  return response.data;
+}
+
 export async function updateProduct({
   id,
   data,

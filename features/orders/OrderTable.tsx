@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { OrderApi, OrderStatus } from './types';
 import { ArrowUpDown, ShoppingCart, MoreVertical, Trash2 } from 'lucide-react';
 import ActionDropDown from '@/components/shared/ActionDropDown';
+import { useRouter } from 'next/navigation';
 
 interface OrderTableProps {
   orders: OrderApi[];
@@ -52,6 +53,7 @@ export default function OrderTable({
   onDeleteSelected,
   formatCurrency,
 }: OrderTableProps) {
+  const router = useRouter();
   return (
     <div className="bg-white border border-border rounded-2xl shadow-2xs overflow-hidden">
       {/* Selected Action Bar */}
@@ -149,7 +151,8 @@ export default function OrderTable({
                 return (
                   <tr
                     key={order.id}
-                    className={`hover:bg-slate-50/70 transition-colors ${isSelected ? 'bg-blue-50/30' : ''}`}
+                    onClick={() => router.push(`/orders/${order.id}`)}
+                    className={`hover:bg-slate-50/70 transition-colors cursor-pointer ${isSelected ? 'bg-blue-50/30' : ''}`}
                   >
                     {/* Checkbox */}
                     <td className="py-4 px-5 text-center">

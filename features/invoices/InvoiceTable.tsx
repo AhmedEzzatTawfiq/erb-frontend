@@ -2,23 +2,24 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { InvoiceApi, InvoiceStatus } from './types';
 import { ArrowUpDown, FileText, MoreVertical, Trash2 } from 'lucide-react';
 import ActionDropDown from '@/components/shared/ActionDropDown';
 
 interface InvoiceTableProps {
   invoices: InvoiceApi[];
-  selectedIds: string[];
-  isAllSelected: boolean;
-  activeDropdown: string | null;
-  setActiveDropdown: (id: string | null) => void;
-  onSelectAll: (checked: boolean) => void;
-  onSelectOne: (id: string) => void;
+  selectedIds?: string[];
+  isAllSelected?: boolean;
+  activeDropdown?: string | null;
+  setActiveDropdown?: (id: string | null) => void;
+  onSelectAll?: (checked: boolean) => void;
+  onSelectOne?: (id: string) => void;
   onSort: (field: string) => void;
-  onViewInvoice: (invoice: InvoiceApi) => void;
-  onEditInvoice: (invoice: InvoiceApi) => void;
-  onDeleteInvoice: (id: string) => void;
-  onDeleteSelected: () => void;
+  onViewInvoice?: (invoice: InvoiceApi) => void;
+  onEditInvoice?: (invoice: InvoiceApi) => void;
+  onDeleteInvoice?: (id: string) => void;
+  onDeleteSelected?: () => void;
   formatCurrency: (val: number) => string;
 }
 
@@ -42,9 +43,9 @@ const InvoiceStatusBadge: React.FC<{ status: string }> = ({ status }) => (
 
 export default function InvoiceTable({
   invoices,
-  selectedIds,
-  isAllSelected,
-  activeDropdown,
+  selectedIds = [],
+  isAllSelected = false,
+  activeDropdown = null,
   setActiveDropdown,
   onSelectAll,
   onSelectOne,
@@ -53,10 +54,12 @@ export default function InvoiceTable({
   onDeleteSelected,
   formatCurrency,
 }: InvoiceTableProps) {
+  const router = useRouter();
+
   return (
     <div className="bg-white border border-border rounded-2xl shadow-2xs overflow-hidden">
       {/* Selected Action Bar */}
-      {selectedIds.length > 0 && (
+      {selectedIds.length > 0 && onDeleteSelected && (
         <div className="bg-blue-50/80 px-6 py-3 border-b border-blue-100 flex items-center justify-between">
           <span className="text-xs font-semibold text-primary">
             {selectedIds.length} invoice{selectedIds.length > 1 ? 's' : ''} selected
@@ -76,14 +79,17 @@ export default function InvoiceTable({
         <table className="w-full text-left border-collapse min-w-225">
           <thead>
             <tr className="bg-app-bg border-b border-border">
-              <th className="py-3.5 px-5 w-12 text-center">
-                <input
-                  type="checkbox"
-                  checked={isAllSelected}
-                  onChange={(e) => onSelectAll(e.target.checked)}
-                  className="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary cursor-pointer"
-                />
-              </th>
+              {onSelectAll && (
+                <th className="py-3.5 px-5 w-12 text-center">
+                  <input
+                    type="checkbox"
+                    checked={isAllSelected}
+                    onChange={(e) => onSelectAll(e.target.checked)}
+                    className="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary cursor-pointer"
+                  />
+                </th>
+              )}
+
               <th
                 onClick={() => onSort('id')}
                 className="py-3.5 px-5 text-xs font-semibold text-text-secondary uppercase tracking-wider cursor-pointer select-none hover:text-text-main transition-colors"
@@ -135,9 +141,12 @@ export default function InvoiceTable({
                   <ArrowUpDown className="w-3 h-3 text-text-muted" />
                 </div>
               </th>
-              <th className="py-3.5 px-5 text-xs font-semibold text-text-secondary uppercase tracking-wider text-right">
-                ACTIONS
-              </th>
+
+              {setActiveDropdown && (
+                <th className="py-3.5 px-5 text-xs font-semibold text-text-secondary uppercase tracking-wider text-right">
+                  ACTIONS
+                </th>
+              )}
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
@@ -162,25 +171,26 @@ export default function InvoiceTable({
                 return (
                   <tr
                     key={invoice.id}
-                    className={`hover:bg-slate-50/70 transition-colors ${isSelected ? 'bg-blue-50/30' : ''}`}
+                    onClick={() => router.push(`/invoices/${invoice.id}`)}
+                    className={`hover:bg-slate-50/70 transition-colors cursor-pointer ${
+                      isSelected ? 'bg-blue-50/30' : ''
+                    }`}
                   >
-                    {/* Checkbox */}
-                    <td className="py-4 px-5 text-center">
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => onSelectOne(invoice.id)}
-                        className="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary cursor-pointer"
-                      />
-                    </td>
+                    {onSelectOne && (
+                      <td className="py-4 px-5 text-center" onClick={(e) => e.stopPropagation()}>
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => onSelectOne(invoice.id)}
+                          className="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary cursor-pointer"
+                        />
+                      </td>
+                    )}
 
                     <td className="py-4 px-5">
-                      <Link
-                        href={`/invoices/${invoice.id}`}
-                        className="text-sm font-bold text-primary hover:underline cursor-pointer block"
-                      >
+                      <span className="text-sm font-bold text-primary hover:underline block">
                         #{shortId}
-                      </Link>
+                      </span>
                     </td>
 
                     <td className="py-4 px-5 text-sm font-medium text-text-main">
@@ -195,7 +205,11 @@ export default function InvoiceTable({
                       {formatCurrency(Number(invoice.totalAmount))}
                     </td>
 
-                    <td className={`py-4 px-5 text-sm font-medium whitespace-nowrap ${isOverdue ? 'text-red-600 font-semibold' : 'text-text-main'}`}>
+                    <td
+                      className={`py-4 px-5 text-sm font-medium whitespace-nowrap ${
+                        isOverdue ? 'text-red-600 font-semibold' : 'text-text-main'
+                      }`}
+                    >
                       {invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString() : '—'}
                     </td>
 
@@ -207,37 +221,39 @@ export default function InvoiceTable({
                       {invoice.invoiceDate ? new Date(invoice.invoiceDate).toLocaleDateString() : '—'}
                     </td>
 
-                    <td className="py-4 px-5 text-right relative">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setActiveDropdown(
-                            activeDropdown === invoice.id ? null : invoice.id
-                          )
-                        }
-                        className="p-1.5 rounded-lg text-text-muted hover:text-text-main hover:bg-slate-100 transition-colors"
-                        aria-label="Actions"
-                      >
-                        <MoreVertical className="w-4 h-4" />
-                      </button>
+                    {setActiveDropdown && (
+                      <td className="py-4 px-5 text-right relative" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setActiveDropdown(
+                              activeDropdown === invoice.id ? null : invoice.id
+                            )
+                          }
+                          className="p-1.5 rounded-lg text-text-muted hover:text-text-main hover:bg-slate-100 transition-colors"
+                          aria-label="Actions"
+                        >
+                          <MoreVertical className="w-4 h-4" />
+                        </button>
 
-                      {activeDropdown === invoice.id && (
-                        <>
-                          <div
-                            className="fixed inset-0 z-10 cursor-default"
-                            onClick={() => setActiveDropdown(null)}
-                          />
-                          <ActionDropDown
-                            href={`/invoices/${invoice.id}`}
-                            id={invoice.id}
-                            editLabel="View Invoice"
-                            deleteLabel="Close"
-                            setActiveDropdown={setActiveDropdown}
-                            onDeleteUser={() => setActiveDropdown(null)}
-                          />
-                        </>
-                      )}
-                    </td>
+                        {activeDropdown === invoice.id && (
+                          <>
+                            <div
+                              className="fixed inset-0 z-10 cursor-default"
+                              onClick={() => setActiveDropdown(null)}
+                            />
+                            <ActionDropDown
+                              href={`/invoices/${invoice.id}`}
+                              id={invoice.id}
+                              editLabel="View Invoice"
+                              deleteLabel="Close"
+                              setActiveDropdown={setActiveDropdown}
+                              onDeleteUser={() => setActiveDropdown(null)}
+                            />
+                          </>
+                        )}
+                      </td>
+                    )}
                   </tr>
                 );
               })
@@ -248,3 +264,4 @@ export default function InvoiceTable({
     </div>
   );
 }
+

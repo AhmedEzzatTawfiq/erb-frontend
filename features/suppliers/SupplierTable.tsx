@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { Supplier } from './types';
 import { ArrowUpDown, Building2, MoreVertical, Eye, Pencil, Trash2 } from 'lucide-react';
 import ActionDropDown from '@/components/shared/ActionDropDown';
+import { useRouter } from 'next/navigation';
+import Avatar from '@/components/shared/Avatar';
 
 interface SupplierTableProps {
   suppliers: Supplier[];
@@ -59,6 +61,7 @@ export default function SupplierTable({
   onDeleteSupplier,
   onDeleteSelected,
 }: SupplierTableProps) {
+  const router = useRouter();
   return (
     <div className="bg-white border border-border rounded-2xl shadow-2xs overflow-hidden">
       {/* Selected Action Bar */}
@@ -161,20 +164,18 @@ export default function SupplierTable({
                       <div className="flex items-center gap-3.5">
                         <div className="w-10 h-10 rounded-full border border-border overflow-hidden
                          bg-slate-100 flex items-center justify-center shrink-0 shadow-2xs">
-                          {supplier.avatar ? (
-                            <img
-                              src={supplier.avatar}
-                              alt={supplier.companyName}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <span
-                              className={`text-xs font-bold w-full h-full flex items-center justify-center ${supplier.initialsBg || 'bg-blue-100 text-blue-700'
-                                }`}
-                            >
-                              {supplier.initials}
-                            </span>
-                          )}
+                          <Link
+                          href={`/suppliers/${supplier.id}`}
+                          className="text-sm font-bold text-text-main hover:text-primary transition-colors cursor-pointer block"
+                        >
+                          <Avatar
+                            avatar={supplier.avatar}
+                            name={supplier.companyName}
+                            initials={supplier.initials}
+                            initialsBg={supplier.initialsBg}
+                            size="lg"
+                          />
+                          </Link>
                         </div>
                         <Link
                           href={`/suppliers/${supplier.id}`}
@@ -191,7 +192,7 @@ export default function SupplierTable({
                       <div className="text-sm font-medium text-text-main">{supplier.email}</div>
                       <div className="text-xs text-text-secondary mt-0.5">{supplier.phone}</div>
                     </td>
-                    
+
                     <td className="py-4 px-5">
                       <div className="flex flex-wrap gap-1 max-w-50">
                         {supplier.productsSupplied && supplier.productsSupplied.length > 0 ? (
@@ -258,3 +259,4 @@ export default function SupplierTable({
     </div>
   );
 }
+

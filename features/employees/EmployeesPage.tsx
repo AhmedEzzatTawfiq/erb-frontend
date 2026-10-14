@@ -10,10 +10,12 @@ import { useDeleteEmployee } from './hooks/useDeleteEmployee';
 
 export default function EmployeesPage() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [departmentFilter, setDepartmentFilter] = useState<string>('All Departments');
+  const [departmentId, setDepartmentId] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('All Statuses');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+
+  
 
   // Sorting
   const [sortField, setSortField] = useState<'name' | 'department' | 'position' | 'hireDate' | 'salary'>('hireDate');
@@ -32,6 +34,7 @@ export default function EmployeesPage() {
     page: currentPage,
     limit: pageSize,
     search: searchTerm,
+    departmentId: departmentId || undefined,
     status: statusFilter !== 'All Statuses' ? statusFilter : undefined,
     sortField: sortField,
     sortOrder: sortOrder,
@@ -98,13 +101,13 @@ export default function EmployeesPage() {
       <EmployeeFilters
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
-        departmentFilter={departmentFilter}
-        setDepartmentFilter={setDepartmentFilter}
+        departmentId={departmentId}
+        setDepartmentId={setDepartmentId}
         statusFilter={statusFilter}
         setStatusFilter={setStatusFilter}
         onResetFilters={() => {
           setSearchTerm('');
-          setDepartmentFilter('All Departments');
+          setDepartmentId('');
           setStatusFilter('All Statuses');
         }}
         onPageReset={() => setCurrentPage(1)}
