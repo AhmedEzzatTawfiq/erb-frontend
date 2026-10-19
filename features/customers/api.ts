@@ -44,12 +44,13 @@ export async function updateCustomer(
 
 
 export async function getCustomers(
-  { page = 1, limit = 4, search = '', sortField, sortOrder }: GetCustomerParams = {}
+  { page = 1, limit = 4, search = '', sortField, sortOrder, status }: GetCustomerParams = {}
 ): Promise<CustomersResponse> {
   const response = await api.get('/customers', {
     params: {
       page,
       limit,
+      ...(status && { status }),
       ...(search && { search }),
       ...(sortField && { sortField }),
       ...(sortOrder && { sortOrder }),

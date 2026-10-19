@@ -37,13 +37,15 @@ export async function updateUser({
 }
 
 export async function getUsers(
-  { page = 1, limit = 6, search = '', sortField, sortOrder }: GetUsersParams = {}
+  { page = 1, limit = 6, search = '', status, role, sortField, sortOrder }: GetUsersParams = {}
 ): Promise<UsersResponse> {
   const response = await api.get('/users', {
     params: {
       page,
       limit,
       ...(search && { search }),
+      ...(status && { status }),
+      ...(role && { role }),
       ...(sortField && { sortField }),
       ...(sortOrder && { sortOrder }),
     },

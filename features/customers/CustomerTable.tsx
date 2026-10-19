@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { ArrowUpDown, Building2, MoreVertical, Trash2 } from 'lucide-react';
 
 import ActionDropDown from '@/components/shared/ActionDropDown';
-import { Customer } from './types';
+import { Customer, CustomerStatus } from './types';
 import { useRouter } from 'next/navigation';
 import Avatar from '@/components/shared/Avatar';
 
@@ -25,6 +25,22 @@ interface CustomerTableProps {
   onDeleteSelected: () => void;
   formatCurrency: (val: number) => string;
 }
+
+const STATUS_STYLES: Record<string, string> = {
+  active: 'bg-blue-50 w-22 justify-center text-blue-700 border border-blue-200',
+  inactive: 'bg-red-50 w-22 justify-center text-red-600 border border-red-200',
+};
+
+const CustomerStatusBadge: React.FC<{ status: CustomerStatus }> = ({ status }) => {
+  const displayStatus = status === 'active' ? 'Active' : status === 'inactive' ? 'Inactive' : status;
+  const style = STATUS_STYLES[status] || STATUS_STYLES[displayStatus] || 'bg-slate-100 text-slate-600 border border-slate-200';
+
+  return (
+    <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold ${style}`}>
+      {displayStatus}
+    </span>
+  );
+};
 
 export default function CustomerTable({
   customers, selectedIds, isAllSelected,
@@ -82,7 +98,7 @@ export default function CustomerTable({
               <th className="py-3.5 px-5 text-xs font-semibold text-text-secondary uppercase tracking-wider text-center">
                 ORDERS
               </th>
-              <th className="py-3.5 px-5 text-xs font-semibold text-text-secondary uppercase tracking-wider text-right">
+              <th className="py-3.5 px-5 text-xs font-semibold text-text-secondary uppercase tracking-wider text-center">
                 TOTAL SPENT
               </th>
               <th className="py-3.5 px-5 text-xs font-semibold text-text-secondary uppercase tracking-wider text-center">
@@ -166,20 +182,12 @@ export default function CustomerTable({
                       {customer.orders}
                     </td>
 
-                    <td className="py-4 px-5 text-right text-sm font-bold text-text-main">
+                    <td className="py-4 px-5 text-center text-sm font-bold text-text-main">
                       {formatCurrency(customer.totalSpent)}
                     </td>
 
                     <td className="py-4 px-5 text-center">
-                      {customer.status === 'Active' ? (
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-accent-blue-bg text-[#4338CA]">
-                          Active
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-border-subtle text-text-secondary">
-                          Inactive
-                        </span>
-                      )}
+                      <CustomerStatusBadge status={customer.status} />
                     </td>
 
                     {/* Actions */}

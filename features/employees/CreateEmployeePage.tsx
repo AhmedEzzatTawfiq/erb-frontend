@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { isAxiosError } from 'axios';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ChevronRight, ChevronDown, Sparkles, Trash2, AlertCircle } from 'lucide-react';
@@ -103,7 +104,15 @@ export default function CreateEmployeePage() {
       if (employeeId) {
         setAvatarError('Employee was created, but the photo upload failed. You can retry without creating another employee.');
       } else {
-        setSubmitError(err instanceof Error ? err.message : 'Failed to create employee. Please try again.');
+        const backendMessage =
+          isAxiosError(err) && err.response?.data?.message
+            ? Array.isArray(err.response.data.message)
+              ? err.response.data.message.join(', ')
+              : String(err.response.data.message)
+            : err instanceof Error
+            ? err.message
+            : 'Failed to create employee. Please try again.';
+        setSubmitError(backendMessage);
       }
 
       setIsSubmitting(false);

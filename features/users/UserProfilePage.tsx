@@ -4,10 +4,41 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { ChevronRight, Pencil, MapPin, Phone, BadgeCheck, CheckCircle2, Briefcase, MessageSquare, Calendar } from 'lucide-react';
 import { useUser } from './hooks/useUser';
+import { useDeleteUserAvatar, useUploadUserAvatar } from './hooks/useUploadUserImage';
+import { useImageUpload } from '@/hooks/useImageUpload';
+import { useState } from 'react';
+import Avatar from '@/components/shared/Avatar';
 
 export default function UserProfilePage() {
   const params = useParams();
   const id = params?.id as string;
+
+  const [feedbackMessage, setFeedbackMessage] = useState<{
+    type: 'success' | 'error';
+    text: string;
+  } | null>(null);
+
+  const {
+    inputRef: fileInputRef,
+    file: selectedFile,
+    preview: avatarPreview,
+    error: avatarError,
+    handleImageChange,
+    removeImage: handleRemovePhoto,
+  } = useImageUpload({ maxSizeMB: 5 });
+
+  const uploadAvatarMutation = useUploadUserAvatar();
+  const deleteAvatarMutation = useDeleteUserAvatar();
+
+  const isAvatarBusy =
+    uploadAvatarMutation.isPending || deleteAvatarMutation.isPending;
+
+  const handleAvatarChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    setFeedbackMessage(null);
+    handleImageChange(event);
+  };
 
   const { data, isLoading, isError } = useUser(id);
   const user = data ?? null;
@@ -55,17 +86,21 @@ export default function UserProfilePage() {
         {/* Left */}
         <div className="lg:col-span-1 space-y-6">
           <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-2xs text-center flex flex-col items-center">
-            <div className="w-24 h-24 rounded-full overflow-hidden mb-4 border-2 border-slate-100 shadow-xs relative group flex items-center justify-center bg-slate-100">
-              {user.avatar ? (
+            <div className="w-48h-48 rounded-full overflow-hidden mb-4 border-2 border-slate-100 shadow-xs relative group flex items-center justify-center bg-slate-100">
+              {avatarPreview ? (
                 <img
-                  src={user.avatar}
-                  alt={user.name}
+                  src={avatarPreview}
+                  alt="New avatar preview"
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <span className="text-xl font-bold text-blue-700">
-                  {user.initials || user.name.slice(0, 2).toUpperCase()}
-                </span>
+                <Avatar
+                  avatar={user.avatar}
+                  name={user.name}
+                  initials={user.initials}
+                  initialsBg={user.initialsBg}
+                  size="xl"
+                />
               )}
             </div>
 
@@ -181,12 +216,6 @@ export default function UserProfilePage() {
               <h3 className="text-base font-bold text-slate-900">
                 System Permissions
               </h3>
-              <button
-                type="button"
-                className="text-xs font-semibold text-[#2563EB] hover:text-[#1D4ED8] transition-colors cursor-pointer"
-              >
-                Manage
-              </button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
@@ -290,12 +319,12 @@ export default function UserProfilePage() {
             </div>
 
             <div className="pt-2 border-t border-slate-100 text-center">
-              <button
+              {/* <button
                 type="button"
                 className="text-xs font-semibold text-[#2563EB] hover:text-[#1D4ED8] transition-colors cursor-pointer"
               >
                 View Full History
-              </button>
+              </button> */}
             </div>
           </div>
         </div>

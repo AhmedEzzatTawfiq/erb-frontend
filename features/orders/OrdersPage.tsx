@@ -15,11 +15,10 @@ export default function OrdersPage() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All Statuses');
-  const [paymentFilter, setPaymentFilter] = useState('Payment Status');
-  const [dateRange, setDateRange] = useState('Last 30 Days');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
-  const [showMoreFilters, setShowMoreFilters] = useState(false);
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -28,6 +27,8 @@ export default function OrdersPage() {
   const { data, isLoading, isError } = useOrders({
     status: statusFilter !== 'All Statuses' ? (statusFilter.toLowerCase() as OrderStatus) : undefined,
     search: searchTerm,
+    from: dateFrom || undefined,
+    to: dateTo || undefined,
     page: currentPage,
     limit: pageSize,
   });
@@ -88,30 +89,8 @@ export default function OrdersPage() {
   };
 
   const handleSort = () => {
-    
+
   };
-
-  if (isLoading) {
-    return (
-      <main className="space-y-6 max-w-7xl mx-auto pb-10">
-        <OrderHeader />
-        <div className="flex items-center justify-center py-24 text-slate-400 text-sm">
-          Loading orders…
-        </div>
-      </main>
-    );
-  }
-
-  if (isError) {
-    return (
-      <main className="space-y-6 max-w-7xl mx-auto pb-10">
-        <OrderHeader />
-        <div className="flex items-center justify-center py-24 text-red-500 text-sm">
-          Failed to load orders. Please try again.
-        </div>
-      </main>
-    );
-  }
 
   return (
     <main className="space-y-6 max-w-7xl mx-auto pb-10">
@@ -122,17 +101,15 @@ export default function OrdersPage() {
         setSearchTerm={setSearchTerm}
         statusFilter={statusFilter}
         setStatusFilter={setStatusFilter}
-        paymentFilter={paymentFilter}
-        setPaymentFilter={setPaymentFilter}
-        dateRange={dateRange}
-        setDateRange={setDateRange}
-        showMoreFilters={showMoreFilters}
-        setShowMoreFilters={setShowMoreFilters}
+        dateFrom={dateFrom}
+        setDateFrom={setDateFrom}
+        dateTo={dateTo}
+        setDateTo={setDateTo}
         onResetFilters={() => {
           setSearchTerm('');
           setStatusFilter('All Statuses');
-          setPaymentFilter('Payment Status');
-          setDateRange('Last 30 Days');
+          setDateFrom('');
+          setDateTo('');
         }}
         onPageReset={() => setCurrentPage(1)}
       />

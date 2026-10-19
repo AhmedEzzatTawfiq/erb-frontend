@@ -1,11 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import {
   ChevronRight, Pencil, MapPin, Phone,
   BadgeCheck, Briefcase, Calendar,
-  Star, Users, MessageSquare,
+  MessageSquare,
   Loader2, Check, X, AlertCircle, Sparkles,
 } from 'lucide-react';
 
@@ -19,12 +18,11 @@ import { EmployeeStatus } from './types';
 
 
 export default function EmployeeProfilePage() {
-  const router = useRouter();
   const params = useParams();
   const id = params?.id as string;
-
+  
   const { data, isLoading, isError } = useEmployee(id);
-  const employee = data ?? null;
+  const employee = data ?? null;          
 
 
   const [feedbackMessage, setFeedbackMessage] = useState<{

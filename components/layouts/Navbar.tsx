@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, Bell, HelpCircle, User as UserIcon, LogOut, Settings, ShieldCheck, ChevronDown, Menu } from "lucide-react";
+import { Search, User as UserIcon, LogOut, ShieldCheck, ChevronDown, Menu } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthProvider";
 
 interface NavbarProps {
@@ -148,15 +148,6 @@ export default function Navbar({ onToggleMobileMenu }: NavbarProps = {}) {
                 >
                   <UserIcon className="w-4 h-4 text-primary" />
                   <span>My Profile</span>
-                </Link>
-
-                <Link
-                  href="/profile"
-                  onClick={() => setIsOpen(false)}
-                  className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-medium text-text-secondary hover:text-text-main hover:bg-slate-50 transition-colors"
-                >
-                  <Settings className="w-4 h-4 text-text-muted" />
-                  <span>Account Settings</span>
                 </Link>
               </div>
 

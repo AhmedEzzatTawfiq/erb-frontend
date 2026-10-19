@@ -6,11 +6,13 @@ export function useUsers({
   page,
   limit,
   search = '',
+  status,
+  role,
   sortField,
   sortOrder,
 }: UseUsersParams = {}) {
   return useQuery({
-    queryKey: ['users', page, limit, search, sortField, sortOrder],
-    queryFn: () => getUsers({ page, limit, search, sortField, sortOrder }),
+    queryKey: ['users', page, limit, search, status, role, sortField, sortOrder],
+    queryFn: () => getUsers({ page, limit, search, status, role, sortField, sortOrder }),
   });
-}
+}

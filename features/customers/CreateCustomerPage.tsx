@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { isAxiosError } from 'axios';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ChevronRight, ChevronDown, Sparkles, Trash2, AlertCircle } from 'lucide-react';
@@ -83,9 +84,9 @@ export default function CreateCustomerPage() {
         setCreatedCustomerId(customerId);
       }
 
-      // if (avatarFile) {
-      //   await uploadAvatar({ customerId, file: avatarFile });
-      // }
+      if (avatarFile) {
+        await uploadAvatar({ customerId: customerId!, file: avatarFile });
+      }
 
       router.push('/customers');
 
@@ -95,7 +96,15 @@ export default function CreateCustomerPage() {
       if (customerId) {
         setAvatarError('Customer was created, but the photo upload failed. You can retry without creating another customer.');
       } else {
-        setSubmitError(err instanceof Error ? err.message : 'Failed to create customer. Please try again.');
+        const backendMessage =
+          isAxiosError(err) && err.response?.data?.message
+            ? Array.isArray(err.response.data.message)
+              ? err.response.data.message.join(', ')
+              : String(err.response.data.message)
+            : err instanceof Error
+            ? err.message
+            : 'Failed to create customer. Please try again.';
+        setSubmitError(backendMessage);
       }
 
       setIsSubmitting(false);
@@ -292,6 +301,7 @@ export default function CreateCustomerPage() {
                 </label>
                 <input
                   type="text"
+                  required
                   value={formData.address}
                   onChange={(e) =>
                     setFormData({ ...formData, address: e.target.value })
@@ -308,6 +318,7 @@ export default function CreateCustomerPage() {
                   </label>
                   <input
                     type="text"
+                    required
                     value={formData.city}
                     onChange={(e) =>
                       setFormData({ ...formData, city: e.target.value })
@@ -323,6 +334,7 @@ export default function CreateCustomerPage() {
                   </label>
                   <div className="relative">
                     <select
+                      required
                       value={formData.country}
                       onChange={(e) =>
                         setFormData({ ...formData, country: e.target.value })

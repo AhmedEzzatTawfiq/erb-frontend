@@ -227,6 +227,7 @@ export default function CreateProductPage() {
                   <p className="text-xs text-red-600 mt-1">{categoryError}</p>
                 )}
               </div>
+              
             </div>
           </div>
 

@@ -38,11 +38,7 @@ export default function UserFilters({
   onPageReset,
   onResetFilters,
 }: UserFiltersProps) {
-  const hasActiveFilter =
-    searchTerm !== '' ||
-    roleFilter !== 'All Roles' ||
-    statusFilter !== 'All Statuses';
-
+  
   return (
     <div className="p-4 md:p-5 flex flex-wrap items-center gap-3 border-b border-border">
 
@@ -65,7 +61,6 @@ export default function UserFilters({
           onPageReset();
         }}
         options={ROLE_OPTIONS}
-        // label="Role"
       />
 
       <FilterSelect
@@ -75,10 +70,8 @@ export default function UserFilters({
           onPageReset();
         }}
         options={STATUS_OPTIONS}
-        // label="Status"
       />
 
-      {hasActiveFilter && (
         <button
           type="button"
           onClick={onResetFilters}
@@ -86,7 +79,6 @@ export default function UserFilters({
         >
           Reset filters
         </button>
-      )}
     </div>
   );
 };

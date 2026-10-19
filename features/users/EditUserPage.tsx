@@ -1,18 +1,72 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
-import { ChevronRight, ChevronDown, Sparkles } from 'lucide-react';
+import { ChevronRight, ChevronDown, Sparkles, Trash2, AlertCircle } from 'lucide-react';
 import { useUser } from './hooks/useUser';
 import { useUpdateUser } from './hooks/useUpdateUser';
+import { useUploadUserAvatar, useDeleteUserAvatar } from './hooks/useUploadUserImage';
+import { useImageUpload } from '@/hooks/useImageUpload';
 
 export default function EditUserPage() {
   const router = useRouter();
   const params = useParams();
   const userId = params?.id as string;
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const {
+    mutateAsync: updateUserAsync,
+    isPending: isUpdating,
+  } = useUpdateUser();
+
+  const {
+    mutateAsync: uploadAvatarAsync,
+    isPending: isUploadingAvatar,
+  } = useUploadUserAvatar();
+
+  const {
+    mutateAsync: deleteAvatarAsync,
+    isPending: isDeletingAvatar,
+  } = useDeleteUserAvatar();
+
+  const isAvatarBusy = isUploadingAvatar || isDeletingAvatar;
+
+  const {
+    inputRef: fileInputRef,
+    file: avatarFile,
+    preview: avatarPreview,
+    error: avatarError,
+    setPreview: setAvatarPreview,
+    setError: setAvatarError,
+    handleImageChange,
+    removeImage: handleRemovePhoto,
+  } = useImageUpload({ maxSizeMB: 5 });
+
+  const [isAvatarRemoved, setIsAvatarRemoved] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleUserImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setAvatarError(null);
+    setSubmitError(null);
+    handleImageChange(e);
+
+    const file = e.currentTarget.files?.[0];
+    if (
+      file &&
+      ['image/jpeg', 'image/png', 'image/webp'].includes(file.type) &&
+      file.size <= 5 * 1024 * 1024
+    ) {
+      setIsAvatarRemoved(false);
+    }
+  };
+
+  const handleUserRemovePhoto = () => {
+    handleRemovePhoto();
+    setIsAvatarRemoved(true);
+    setAvatarError(null);
+    setSubmitError(null);
+  };
 
   const { data: userData, isLoading } = useUser(userId);
 
@@ -22,10 +76,8 @@ export default function EditUserPage() {
     email: '',
     password: '',
     role: '',
-    status: '',
+    status: 'active',
   });
-
-  const [avatar, setAvatar] = useState<string | null>(null);
 
   useEffect(() => {
     if (!userData) return;
@@ -39,50 +91,50 @@ export default function EditUserPage() {
       lastName: last,
       email: userData.email || '',
       password: '',
-      role: userData.role || '',
-      status: userData.status || 'Active',
+      role: userData.role?.toLowerCase() || '',
+      status: userData.status?.toLowerCase() || 'active',
     });
 
-    if (userData.avatar) {
-      setAvatar(userData.avatar);
-    }
+    setAvatarPreview(userData.avatar?.trim() || null);
   }, [userData]);
 
-  const {
-    mutate: updateUser,
-    isPending,
-    isError,
-    error,
-  } = useUpdateUser();
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setAvatar(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const payload = {
-      name: `${formData.firstName} ${formData.lastName}`,
-      email: formData.email,
-      ...(formData.password && { password: formData.password }),
-      role: formData.role,
-      status: formData.status,
-      ...(avatar && { avatar }),
-    };
+    if (isSubmitting || isAvatarBusy) return;
 
-    updateUser({ id: userId, data: payload }, {
-      onSuccess: () => {
-        router.push('/users');
-      },
-    });
+    setIsSubmitting(true);
+    setSubmitError(null);
+    setAvatarError(null);
+
+    try {
+      const payload = {
+        name: `${formData.firstName} ${formData.lastName}`.trim(),
+        email: formData.email,
+        ...(formData.password && { password: formData.password }),
+        role: formData.role,
+        status: formData.status,
+      };
+
+      await updateUserAsync({ id: userId, data: payload });
+
+      if (avatarFile) {
+        await uploadAvatarAsync({ userId, file: avatarFile });
+      } else if (isAvatarRemoved) {
+        await deleteAvatarAsync(userId);
+      }
+
+      router.push('/users');
+    } catch (err) {
+      console.error('Failed to update user:', err);
+      setSubmitError(
+        err instanceof Error
+          ? err.message
+          : 'Failed to update user. Please try again.',
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -117,9 +169,9 @@ export default function EditUserPage() {
             <div className="flex items-center gap-5">
               <div className="w-20 h-20 rounded-xl bg-[#F0F4FF] border border-indigo-100/80 flex items-center
                justify-center shrink-0 overflow-hidden relative group shadow-2xs">
-                {avatar ? (
+                {avatarPreview ? (
                   <img
-                    src={avatar}
+                    src={avatarPreview}
                     alt="avatar"
                     className="w-full h-full object-cover"
                   />
@@ -147,21 +199,41 @@ export default function EditUserPage() {
                 <input
                   type="file"
                   ref={fileInputRef}
-                  onChange={handleImageChange}
-                  accept="image/png, image/jpeg, image/gif"
+                  onChange={handleUserImageChange}
+                  accept="image/png, image/jpeg, image/webp"
                   className="hidden"
                 />
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-sm
-                   font-medium px-4 py-2 rounded-lg shadow-2xs transition-colors cursor-pointer"
-                >
-                  Change Photo
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-sm
+                     font-medium px-4 py-2 rounded-lg shadow-2xs transition-colors cursor-pointer"
+                  >
+                    {avatarPreview ? 'Change Photo' : 'Upload Photo'}
+                  </button>
+                  {avatarPreview && (
+                    <button
+                      type="button"
+                      onClick={handleUserRemovePhoto}
+                      className="bg-white border border-red-200 hover:bg-red-50 text-red-600 text-sm
+                       font-medium px-3 py-2 rounded-lg shadow-2xs transition-colors cursor-pointer
+                       flex items-center gap-1.5"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Remove</span>
+                    </button>
+                  )}
+                </div>
                 <p className="text-xs text-slate-400 mt-2 font-normal">
-                  JPG, GIF or PNG. Max size of 800K
+                  JPG, PNG or WEBP. Max size 5MB
                 </p>
+                {avatarError && (
+                  <p className="text-xs text-red-600 mt-1.5 flex items-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{avatarError}</span>
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -219,7 +291,7 @@ export default function EditUserPage() {
                     setFormData({ ...formData, email: e.target.value })
                   }
                   className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm
-                   text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20  transition-all"
+                   text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
                 />
               </div>
 
@@ -239,6 +311,7 @@ export default function EditUserPage() {
                 />
               </div>
 
+              {/* Role */}
               <div>
                 <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
                   ROLE *
@@ -250,17 +323,18 @@ export default function EditUserPage() {
                       setFormData({ ...formData, role: e.target.value })
                     }
                     className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900
-                     focus:outline-none focus:ring-2 focus:ring-blue-500/20  transition-all appearance-none pr-10 cursor-pointer"
+                     focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all appearance-none pr-10 cursor-pointer"
                   >
                     <option value="" disabled hidden>Select Role</option>
-                    <option value="Admin">Admin</option>
-                    <option value="Manager">Manager</option>
-                    <option value="Employee">Employee</option>
+                    <option value="employee">Employee</option>
+                    <option value="admin">Admin</option>
+                    <option value="manager">Manager</option>
                   </select>
                   <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
               </div>
 
+              {/* Status */}
               <div>
                 <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
                   STATUS *
@@ -274,8 +348,9 @@ export default function EditUserPage() {
                     className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900
                      focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all appearance-none pr-10 cursor-pointer"
                   >
-                    <option value="Active">Active</option>
-                    <option value="Inactive">Inactive</option>
+                    <option value="" disabled hidden>Select Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
                   </select>
                   <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
@@ -283,10 +358,17 @@ export default function EditUserPage() {
             </div>
           </div>
 
+          {submitError && (
+            <p role="alert" className="text-sm text-red-600 flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              {submitError}
+            </p>
+          )}
+
           <div className="pt-6 border-t border-slate-100 flex items-center justify-end gap-3">
             <button
               type="button"
-              onClick={() => router.push('/users')}
+              onClick={() => router.push(`/users/${userId}`)}
               className="px-4 py-2.5 text-sm font-medium text-slate-600 hover:text-slate-900
                hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
             >
@@ -294,23 +376,16 @@ export default function EditUserPage() {
             </button>
             <button
               type="submit"
-              disabled={isPending}
+              disabled={isSubmitting || isUpdating || isAvatarBusy}
               className="px-5 py-2.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-sm font-medium rounded-lg
                shadow-xs hover:shadow transition-all cursor-pointer flex items-center gap-2 disabled:opacity-75"
             >
-              {isPending ? (
+              {isSubmitting || isUpdating || isAvatarBusy ? (
                 <span>Saving...</span>
               ) : (
                 <span>Save Changes</span>
               )}
             </button>
-            {isError && (
-              <p className="text-sm text-red-600">
-                {error instanceof Error
-                  ? error.message
-                  : 'Failed to update user'}
-              </p>
-            )}
           </div>
         </form>
       </div>

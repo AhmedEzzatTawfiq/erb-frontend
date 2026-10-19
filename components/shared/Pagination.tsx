@@ -20,6 +20,7 @@ export default function Pagination({
   const startEntry = totalFilteredCount === 0 ? 0 : (currentPage - 1) * pageSize + 1;
   const endEntry = Math.min(currentPage * pageSize, totalFilteredCount);
 
+
   return (
     <div className="p-4 sm:p-5 border-t border-border bg-[#F8FAFC]/40 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <p className="text-xs sm:text-sm text-text-secondary font-medium">

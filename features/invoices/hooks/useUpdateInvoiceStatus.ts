@@ -6,7 +6,8 @@ export function useUpdateInvoiceStatus() {
 
   return useMutation({
     mutationFn: updateInvoiceStatus,
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['invoices', variables.id] });
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
     },
   });

@@ -1,3 +1,5 @@
+export type CustomerStatus = 'active' | 'inactive';
+
 export interface CreateCustomerInput {
   companyName: string;
   contactName: string;
@@ -5,6 +7,7 @@ export interface CreateCustomerInput {
   avatar?: string;
   phone?: string;
   address?: string;
+  status?: CustomerStatus;
   city?: string;
   country?: string;
   taxId?: string;
@@ -14,6 +17,7 @@ export interface GetCustomerParams {
   page?: number;
   limit?: number;
   search?: string;
+  status?: CustomerStatus;
   sortField?: string;
   sortOrder?: 'asc' | 'desc';
 }
@@ -22,6 +26,7 @@ export interface UseCustomerParams {
   page?: number;
   limit?: number;
   search?: string;
+  status?: CustomerStatus;
   sortField?: string;
   sortOrder?: 'asc' | 'desc';
 }
@@ -40,7 +45,7 @@ export interface CustomerApi {
   orders: number;
   totalSpent: number;
   isDeleted: boolean;
-  status?: 'Active' | 'Inactive' | string;
+  status?: CustomerStatus;
   initials?: string;
   initialsBg?: string;
   createdAt: string;
@@ -52,7 +57,8 @@ export type Customer = CustomerApi;
 export interface PaginationMeta {
   page: number;
   limit: number;
-  totalCount: number;
+  totalCount?: number;
+  total?: number;
   totalPages: number;
 }
 

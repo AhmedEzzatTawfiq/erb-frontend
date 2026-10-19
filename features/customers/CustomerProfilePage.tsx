@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import {
@@ -8,21 +8,91 @@ import {
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { useCustomer } from './hooks/useCustomer';
+import Avatar from '@/components/shared/Avatar';
+import { useImageUpload } from '@/hooks/useImageUpload';
+import { useDeleteCustomerAvatar, useUploadCustomerAvatar } from './hooks/useUploadCustomerImage';
 
 export default function CustomerProfilePage() {
   const params = useParams();
-
   const id = params.id as string;
 
-  const {
-    data,
-    isLoading,
-    isError,
-    error,
-  } = useCustomer(id);
-
+  const { data, isLoading, isError } = useCustomer(id);
   const customer = data ?? null;
-  console.log(data, "customer")
+
+  const [feedbackMessage, setFeedbackMessage] = useState<{
+    type: 'success' | 'error';
+    text: string;
+  } | null>(null);
+
+  const {
+    inputRef: fileInputRef,
+    file: selectedFile,
+    preview: avatarPreview,
+    error: avatarError,
+    handleImageChange,
+    removeImage: handleRemovePhoto,
+  } = useImageUpload({ maxSizeMB: 5 });
+
+  const uploadAvatarMutation = useUploadCustomerAvatar();
+  const deleteAvatarMutation = useDeleteCustomerAvatar();
+
+  const isAvatarBusy =
+    uploadAvatarMutation.isPending || deleteAvatarMutation.isPending;
+
+  const handleAvatarChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    setFeedbackMessage(null);
+    handleImageChange(event);
+  };
+
+  const handleUploadAvatar = () => {
+    if (!selectedFile || !id || isAvatarBusy) return;
+
+    setFeedbackMessage(null);
+
+    uploadAvatarMutation.mutate(
+      { customerId: id, file: selectedFile },
+      {
+        onSuccess: () => {
+          handleRemovePhoto();
+          setFeedbackMessage({
+            type: 'success',
+            text: 'Avatar updated successfully!',
+          });
+        },
+        onError: () => {
+          setFeedbackMessage({
+            type: 'error',
+            text: 'Failed to upload customer avatar.',
+          });
+        },
+      },
+    );
+  };
+
+  const handleDeleteAvatar = () => {
+    if (!id || isAvatarBusy) return;
+
+    setFeedbackMessage(null);
+
+    deleteAvatarMutation.mutate(id, {
+      onSuccess: () => {
+        handleRemovePhoto();
+        setFeedbackMessage({
+          type: 'success',
+          text: 'Avatar removed successfully!',
+        });
+      },
+      onError: () => {
+        setFeedbackMessage({
+          type: 'error',
+          text: 'Failed to remove employee avatar.',
+        });
+      },
+    });
+  };
+
 
   if (isLoading) {
     return <div>Loading customer...</div>;
@@ -74,9 +144,23 @@ export default function CustomerProfilePage() {
         <div className="lg:col-span-1 space-y-6">
           {/* Profile Card */}
           <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-2xs text-center flex flex-col items-center">
-            {/* <div className={`w-20 h-20 rounded-full mb-4 flex items-center justify-center text-xl font-bold border-2 border-slate-100 shadow-2xs ${customer.initialsBg}`}>
-              {customer.initials}
-            </div> */}
+            <div className="w-48h-48 rounded-full overflow-hidden mb-4 border-2 border-slate-100 shadow-xs relative group flex items-center justify-center bg-slate-100">
+              {avatarPreview ? (
+                <img
+                  src={avatarPreview}
+                  alt="New avatar preview"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <Avatar
+                  avatar={customer.avatar}
+                  name={customer.name}
+                  initials={customer.initials}
+                  initialsBg={customer.initialsBg}
+                  size="xl"
+                />
+              )}
+            </div>
 
             <h2 className="text-lg font-bold text-slate-900">{customer?.companyName}</h2>
             <p className="text-xs text-slate-500 font-medium mb-3">

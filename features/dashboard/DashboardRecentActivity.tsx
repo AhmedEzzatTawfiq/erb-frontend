@@ -18,13 +18,13 @@ export default function DashboardRecentActivity({
     switch (status) {
       case 'Completed':
       case 'Delivered':
-        return 'bg-emerald-50 text-emerald-700 border-emerald-200/60';
+        return 'bg-emerald-50 text-center text-emerald-700 border-emerald-200/60';
       case 'Processing':
         return 'bg-amber-50 text-amber-700 border-amber-200/60';
       case 'Pending':
         return 'bg-rose-50 text-rose-700 border-rose-200/60';
       case 'Shipped':
-        return 'bg-indigo-50 text-indigo-700 border-indigo-200/60';
+        return ' bg-indigo-50 text-indigo-700 text-center border-indigo-200/60';
       case 'Cancelled':
         return 'bg-slate-100 text-slate-700 border-slate-200';
       default:
@@ -93,7 +93,7 @@ export default function DashboardRecentActivity({
                   </td>
                   <td className="py-3.5 px-5">
                     <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-semibold border ${getStatusBadge(
+                      className={`inline-flex w-22 justify-center py-0.5 rounded-md text-xs font-semibold border ${getStatusBadge(
                         activity.status
                       )}`}
                     >

@@ -1,20 +1,12 @@
 'use client';
 
 import React from 'react';
-import {
-  TrendingUp, TrendingDown, CreditCard,
-  ShoppingCart, Users, Package, Wallet,
-  ClipboardList, LucideIcon,
-} from 'lucide-react';
+import { TrendingUp, TrendingDown, CreditCard, ShoppingCart, Users, Package, Wallet, ClipboardList, LucideIcon } from 'lucide-react';
 import { DashboardStatsData, StatItem } from './types';
 
 const ICON_MAP: Record<string, LucideIcon> = {
-  CreditCard,
-  ShoppingCart,
-  Users,
-  Package,
-  Wallet,
-  ClipboardList,
+  CreditCard, ShoppingCart, Users,
+  Package, Wallet, ClipboardList,
 };
 
 interface StatCardProps {
@@ -27,7 +19,7 @@ const StatCard: React.FC<StatCardProps> = ({ stat }) => {
 
   return (
     <div className="stat-card">
-      <div className="flex items-center justify-between">
+      <div className="flex justify-between">
         <span className="text-xs font-semibold text-[#64748B] uppercase tracking-wider">
           {label}
         </span>

@@ -8,11 +8,11 @@ import CustomerTable from './CustomerTable';
 import Pagination from '@/components/shared/Pagination';
 import { useCustomers } from './hooks/useCustomers';
 import { useDeleteCustomer } from './hooks/useDeleteCustomer';
+import type { CustomerStatus } from './types';
 
 export default function CustomersPage() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('All Statuses');
-  const [dateRange, setDateRange] = useState<string>('Last 30 Days');
+  const [statusFilter, setStatusFilter] = useState<'All Statuses' | CustomerStatus>('All Statuses');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
@@ -23,9 +23,8 @@ export default function CustomersPage() {
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 4;
+  const pageSize = 6;
 
-  const [showMoreFilters, setShowMoreFilters] = useState(false);
 
   const {
     data,
@@ -38,9 +37,19 @@ export default function CustomersPage() {
     search: searchTerm,
     sortField: sortField,
     sortOrder: sortOrder,
+    status: statusFilter !== 'All Statuses' ? statusFilter : undefined,
+  });
+
+  console.log({
+    currentPage,
+    requestedLimit: pageSize,
+    returnedCustomers: data?.data?.length,
+    meta: data?.meta,
   });
 
   const customers = data?.data ?? [];
+  const totalCount = data?.meta?.totalCount ?? data?.meta?.total ?? customers.length;
+  const totalPages = data?.meta?.totalPages ?? 1;
 
 
   // Selection Handlers
@@ -62,10 +71,7 @@ export default function CustomersPage() {
     customers.length > 0 &&
     customers.every((c) => selectedIds.includes(c.id));
 
-  const {
-    mutate: deleteCustomer,
-    isPending: isDeleting
-  } = useDeleteCustomer();
+  const { mutate: deleteCustomer } = useDeleteCustomer();
 
   const handleDeleteCustomer = (id: string) => {
     deleteCustomer(id, {
@@ -88,17 +94,13 @@ export default function CustomersPage() {
     });
   };
 
-  const handleSearchChange = (value: string) => {
-    setSearchTerm(value);
-    setCurrentPage(1);
-  };
-
 
   const handleSort = (field: 'companyName' | 'orders' | 'totalSpent') => {
     if (sortField === field) {
-      setSortOrder((prev) =>
-        prev === 'asc' ? 'desc' : 'asc'
-      );
+      setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortField(field);
+      setSortOrder('asc');
     }
   };
 
@@ -114,14 +116,10 @@ export default function CustomersPage() {
         setSearchTerm={setSearchTerm}
         statusFilter={statusFilter}
         setStatusFilter={setStatusFilter}
-        dateRange={dateRange}
-        setDateRange={setDateRange}
-        showMoreFilters={showMoreFilters}
-        setShowMoreFilters={setShowMoreFilters}
         onResetFilters={() => {
           setSearchTerm('');
           setStatusFilter('All Statuses');
-          setDateRange('Last 30 Days');
+          setCurrentPage(1);
         }}
         onPageReset={() => setCurrentPage(1)}
       />
@@ -144,9 +142,9 @@ export default function CustomersPage() {
         />
 
         <Pagination
-          currentPage={data?.meta.page ?? 1}
-          totalPages={data?.meta.totalPages ?? 1}
-          totalFilteredCount={data?.meta.totalCount ?? 0}
+          currentPage={data?.meta.page ?? currentPage}
+          totalPages={totalPages}
+          totalFilteredCount={totalCount}
           pageSize={data?.meta.limit ?? pageSize}
           onPageChange={setCurrentPage}
           entityLabel="customers"

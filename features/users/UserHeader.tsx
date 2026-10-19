@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { Plus } from 'lucide-react';
 import PageHeader from '@/components/shared/PageHeader';
+import { RoleGuard } from '@/features/auth/RoleGuard';
 
 interface UserHeaderProps {
   onAddUser?: () => void;
@@ -15,13 +16,15 @@ export default function UserHeader({ onAddUser }: UserHeaderProps) {
       title="Users"
       subtitle="Manage your team members and their roles."
       actions={
+        <RoleGuard allowedRoles={['admin']}>                    
         <Link
-          href="/users/create"
-          className="btn-primary text-xs sm:text-sm font-semibold shadow-xs hover:shadow transition-all"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Add User</span>
-        </Link>
+            href="/users/create"
+            className="btn-primary text-xs sm:text-sm font-semibold shadow-xs hover:shadow transition-all"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add User</span>
+          </Link>
+        </RoleGuard>
       }
     />
   );

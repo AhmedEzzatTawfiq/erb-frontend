@@ -1,5 +1,10 @@
-export type UserRole = 'Admin' | 'Manager' | 'Employee';
-export type UserStatus = 'Active' | 'Inactive';
+export type UserRole = 'admin' | 'manager' | 'employee';
+
+export type UserStatus = 'active' | 'inactive';
+
+export type UserRoleFilter = 'All Roles' | UserRole;
+
+export type UserStatusFilter = 'All Statuses' | UserStatus;
 
 export interface User {
   id: string;
@@ -17,8 +22,8 @@ export interface CreateUserInput {
   name: string;
   email: string;
   password?: string;
-  role?: UserRole | string;
-  status?: UserStatus | string;
+  status?: UserStatus;
+  role?: UserRole;
   avatar?: string;
 }
 
@@ -26,6 +31,8 @@ export interface GetUsersParams {
   page?: number;
   limit?: number;
   search?: string;
+  status?: UserStatus;
+  role?: UserRole;
   sortField?: string;
   sortOrder?: 'asc' | 'desc';
 }
@@ -34,6 +41,8 @@ export interface UseUsersParams {
   page?: number;
   limit?: number;
   search?: string;
+  status?: UserStatus;
+  role?: UserRole;
   sortField?: string;
   sortOrder?: 'asc' | 'desc';
 }

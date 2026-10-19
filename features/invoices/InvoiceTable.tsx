@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { InvoiceApi, InvoiceStatus } from './types';
 import { ArrowUpDown, FileText, MoreVertical, Trash2 } from 'lucide-react';
-import ActionDropDown from '@/components/shared/ActionDropDown';
+
 
 interface InvoiceTableProps {
   invoices: InvoiceApi[];
@@ -33,7 +33,7 @@ const FALLBACK_STATUS_STYLE = 'bg-slate-100 text-slate-500 border border-slate-2
 
 const InvoiceStatusBadge: React.FC<{ status: string }> = ({ status }) => (
   <span
-    className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold capitalize ${
+    className={`inline-flex min-w-24 items-center justify-center px-2.5 py-1 rounded-lg text-xs font-semibold capitalize ${
       STATUS_STYLES[status as InvoiceStatus] ?? FALLBACK_STATUS_STYLE
     }`}
   >
@@ -45,12 +45,9 @@ export default function InvoiceTable({
   invoices,
   selectedIds = [],
   isAllSelected = false,
-  activeDropdown = null,
-  setActiveDropdown,
   onSelectAll,
   onSelectOne,
   onSort,
-  onDeleteInvoice,
   onDeleteSelected,
   formatCurrency,
 }: InvoiceTableProps) {
@@ -115,7 +112,7 @@ export default function InvoiceTable({
                 onClick={() => onSort('totalAmount')}
                 className="py-3.5 px-5 text-xs font-semibold text-text-secondary uppercase tracking-wider text-right cursor-pointer select-none hover:text-text-main transition-colors"
               >
-                <div className="flex items-center justify-end gap-1.5">
+                <div className="flex items-center gap-1.5">
                   <span>AMOUNT</span>
                   <ArrowUpDown className="w-3 h-3 text-text-muted" />
                 </div>
@@ -129,7 +126,7 @@ export default function InvoiceTable({
                   <ArrowUpDown className="w-3 h-3 text-text-muted" />
                 </div>
               </th>
-              <th className="py-3.5 px-5 text-xs font-semibold text-text-secondary uppercase tracking-wider">
+              <th className="py-3.5 px-5 text-xs font-semibold text-text-secondary uppercase tracking-wider ">
                 STATUS
               </th>
               <th
@@ -142,11 +139,6 @@ export default function InvoiceTable({
                 </div>
               </th>
 
-              {setActiveDropdown && (
-                <th className="py-3.5 px-5 text-xs font-semibold text-text-secondary uppercase tracking-wider text-right">
-                  ACTIONS
-                </th>
-              )}
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
@@ -201,7 +193,7 @@ export default function InvoiceTable({
                       #{orderId}
                     </td>
 
-                    <td className="py-4 px-5 text-right text-sm font-bold text-text-main">
+                    <td className="py-4 px-5 text-sm font-bold text-text-main">
                       {formatCurrency(Number(invoice.totalAmount))}
                     </td>
 
@@ -220,40 +212,6 @@ export default function InvoiceTable({
                     <td className="py-4 px-5 text-sm text-text-secondary font-medium whitespace-nowrap">
                       {invoice.invoiceDate ? new Date(invoice.invoiceDate).toLocaleDateString() : '—'}
                     </td>
-
-                    {setActiveDropdown && (
-                      <td className="py-4 px-5 text-right relative" onClick={(e) => e.stopPropagation()}>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setActiveDropdown(
-                              activeDropdown === invoice.id ? null : invoice.id
-                            )
-                          }
-                          className="p-1.5 rounded-lg text-text-muted hover:text-text-main hover:bg-slate-100 transition-colors"
-                          aria-label="Actions"
-                        >
-                          <MoreVertical className="w-4 h-4" />
-                        </button>
-
-                        {activeDropdown === invoice.id && (
-                          <>
-                            <div
-                              className="fixed inset-0 z-10 cursor-default"
-                              onClick={() => setActiveDropdown(null)}
-                            />
-                            <ActionDropDown
-                              href={`/invoices/${invoice.id}`}
-                              id={invoice.id}
-                              editLabel="View Invoice"
-                              deleteLabel="Close"
-                              setActiveDropdown={setActiveDropdown}
-                              onDeleteUser={() => setActiveDropdown(null)}
-                            />
-                          </>
-                        )}
-                      </td>
-                    )}
                   </tr>
                 );
               })

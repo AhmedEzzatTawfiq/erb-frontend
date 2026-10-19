@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { Plus, Download } from 'lucide-react';
 import PageHeader from '@/components/shared/PageHeader';
+import { RoleGuard } from '../auth/RoleGuard';
 
 interface EmployeeHeaderProps {
   onAddEmployee?: () => void;
@@ -22,16 +23,18 @@ export default function EmployeeHeader({ onAddEmployee }: EmployeeHeaderProps) {
             <Download className="w-4 h-4" />
             <span>Export</span>
           </button>
-          <Link
-            href="/employees/create"
-            onClick={() => {
-              if (onAddEmployee) onAddEmployee();
-            }}
-            className="btn-primary text-xs sm:text-sm font-semibold shadow-xs hover:shadow transition-all"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Add Employee</span>
-          </Link>
+          <RoleGuard allowedRoles={['admin']}>
+            <Link
+              href="/employees/create"
+              onClick={() => {
+                if (onAddEmployee) onAddEmployee();
+              }}
+              className="btn-primary text-xs sm:text-sm font-semibold shadow-xs hover:shadow transition-all"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Add Employee</span>
+            </Link>
+          </RoleGuard>
         </div>
       }
     />

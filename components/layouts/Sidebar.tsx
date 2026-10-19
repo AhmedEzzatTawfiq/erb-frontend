@@ -10,7 +10,7 @@ import {
   LogOut, X,
 } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthProvider";
-
+ 
 interface NavItem {
   name: string;
   href: string;

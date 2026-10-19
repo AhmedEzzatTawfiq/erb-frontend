@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { User, UserStatus } from './types';
 import { ArrowUpDown, Users, Trash2, MoreVertical } from 'lucide-react';
 import ActionDropDown from '@/components/shared/ActionDropDown';
-import { useRouter } from 'next/navigation';
 import Avatar from '@/components/shared/Avatar';
 
 interface UserTableProps {
@@ -43,12 +42,9 @@ export default function UserTable({
   onSelectAll,
   onSelectOne,
   onSort,
-  onViewUser,
-  onEditUser,
   onDeleteUser,
   onDeleteSelected,
 }: UserTableProps) {
-  const router = useRouter();
   return (
     <div>
       {/* Selected Action Bar */}
@@ -176,11 +172,11 @@ export default function UserTable({
                           <Link
                             href={`/users/${user.id}`}
                             className="text-sm font-semibold text-text-main hover:text-primary transition-colors
-                             cursor-pointer block"
+                            cursor-pointer block"
                           >
                             {user.name}
-                          </Link>
                           <div className="text-xs text-text-secondary mt-0.5">{user.email}</div>
+                          </Link>
                         </div>
                       </div>
                     </td>

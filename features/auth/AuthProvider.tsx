@@ -49,7 +49,7 @@ export function AuthProvider({
     });
 
     return () => {
-      setAuthExpieredHandler(() => {});
+      setAuthExpieredHandler(() => { });
     };
   }, []);
 

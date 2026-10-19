@@ -91,9 +91,20 @@ api.interceptors.response.use(
         const originalRequest =
             error.config as retryableRequestConfig | undefined;
 
+        const url = originalRequest?.url ?? '';
+
+        const isAuthEndpoint = [
+            '/auth/login',
+            '/auth/register',
+            '/auth/refresh',
+            '/auth/forgot-password',
+            '/auth/reset-password',
+        ].some((endpoint) => url.includes(endpoint));
+
         if (
             error.response?.status !== 401 ||
-            !originalRequest
+            !originalRequest ||
+            isAuthEndpoint
         ) {
             return Promise.reject(error);
         }

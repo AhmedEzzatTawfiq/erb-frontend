@@ -1,47 +1,41 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, ChevronDown, Check } from 'lucide-react';
+import { ArrowLeft, ChevronDown, Check, FolderPlus } from 'lucide-react';
 
 import { useCreateSupplier } from './hooks/useCreateSupplier';
+import { useCategories, useCreateCategory } from '../categories/hooks/useCategories';
 
-const CATEGORIES = [
-  'Electronics',
-  'Hardware',
-  'Software',
-  'Raw Materials',
-  'Packaging',
-  'Networking',
-  'Peripherals',
-  'Shipping & Logistics',
-  'Office Supplies',
-  'Chemicals & Metals',
-];
 
-const PAYMENT_TERMS = [
-  'Immediate',
-  'Net 15',
-  'Net 30',
-  'Net 45',
-  'Net 60',
-  'Due on Receipt',
-];
 
 export default function CreateSupplierPage() {
   const router = useRouter();
 
+  const { data: categories = [], isLoading: categoriesLoading } = useCategories();
+  const { mutateAsync: createCategoryMutation, isPending: isCreatingCategory } = useCreateCategory();
+
   const [formData, setFormData] = useState({
     companyName: '',
-    category: '',
+    categoryId: '',
     contactPerson: '',
     email: '',
     phone: '',
     address: '',
-    paymentTerms: 'Net 30',
     status: 'Active',
   });
+
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [showAddCategory, setShowAddCategory] = useState(false);
+  const [categoryError, setCategoryError] = useState('');
+
+  // Auto-select first category if available and no category selected
+  useEffect(() => {
+    if (categories.length > 0 && !formData.categoryId) {
+      setFormData((prev) => ({ ...prev, categoryId: categories[0].id }));
+    }
+  }, [categories, formData.categoryId]);
 
   const {
     mutate: createSupplier,
@@ -50,8 +44,29 @@ export default function CreateSupplierPage() {
     error,
   } = useCreateSupplier();
 
+  const handleCreateCategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCategoryError('');
+    if (!newCategoryName.trim()) return;
+
+    try {
+      const newCat = await createCategoryMutation(newCategoryName.trim());
+      setFormData((prev) => ({ ...prev, categoryId: newCat.id }));
+      setNewCategoryName('');
+      setShowAddCategory(false);
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || 'Failed to create category';
+      setCategoryError(Array.isArray(msg) ? msg.join(', ') : msg);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!formData.categoryId) {
+      alert('Please select or create a category first.');
+      return;
+    }
 
     createSupplier(
       {
@@ -60,9 +75,8 @@ export default function CreateSupplierPage() {
         email: formData.email,
         phone: formData.phone,
         address: formData.address,
-        paymentTerms: formData.paymentTerms,
         status: formData.status,
-        productsSupplied: formData.category ? [formData.category] : [],
+        productsSupplied: formData.categoryId ? [formData.categoryId] : [],
       },
       {
         onSuccess: () => {
@@ -121,30 +135,67 @@ export default function CreateSupplierPage() {
                 />
               </div>
 
+              {/* Category Dropdown & Quick Create */}
               <div>
-                <label className="text-xs font-semibold text-slate-600 block mb-1.5">
-                  Category of Products Supplied
-                </label>
-                <div className="relative">
-                  <select
-                    value={formData.category}
-                    onChange={(e) =>
-                      setFormData({ ...formData, category: e.target.value })
-                    }
-                    className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900
-                     focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all appearance-none pr-10 cursor-pointer"
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
+                    Category of Products Supplied *
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddCategory(!showAddCategory)}
+                    className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 cursor-pointer"
                   >
-                    <option value="">
-                      Select a category
-                    </option>
-                    {CATEGORIES.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <FolderPlus className="w-3.5 h-3.5" />
+                    {showAddCategory ? 'Cancel' : 'New Category'}
+                  </button>
                 </div>
+
+                {showAddCategory ? (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={newCategoryName}
+                      onChange={(e) => setNewCategoryName(e.target.value)}
+                      placeholder="Category name..."
+                      className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleCreateCategory}
+                      disabled={isCreatingCategory || !newCategoryName.trim()}
+                      className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg disabled:opacity-50 cursor-pointer"
+                    >
+                      {isCreatingCategory ? 'Saving...' : 'Add'}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <select
+                      required
+                      value={formData.categoryId}
+                      onChange={(e) =>
+                        setFormData({ ...formData, categoryId: e.target.value })
+                      }
+                      className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900
+                                     focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all appearance-none pr-10 cursor-pointer"
+                    >
+                      {categoriesLoading && <option value="">Loading categories...</option>}
+                      {!categoriesLoading && categories.length === 0 && (
+                        <option value="">No categories found. Click 'New Category' above.</option>
+                      )}
+                      {categories.map((cat) => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  </div>
+                )}
+                {categoryError && (
+                  <p className="text-xs text-red-600 mt-1">{categoryError}</p>
+                )}
               </div>
 
               <div>
@@ -163,25 +214,7 @@ export default function CreateSupplierPage() {
                 />
               </div>
 
-              <div>
-                <label className="text-xs font-semibold text-slate-600 block mb-1.5">
-                  Payment Terms
-                </label>
-                <select
-                  value={formData.paymentTerms}
-                  onChange={(e) =>
-                    setFormData({ ...formData, paymentTerms: e.target.value })
-                  }
-                  className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900
-                   focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all cursor-pointer"
-                >
-                  {PAYMENT_TERMS.map((term) => (
-                    <option key={term} value={term}>
-                      {term}
-                    </option>
-                  ))}
-                </select>
-              </div>
+
             </div>
           </div>
 

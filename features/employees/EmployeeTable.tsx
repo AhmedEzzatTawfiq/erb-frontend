@@ -25,8 +25,8 @@ interface EmployeeTableProps {
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  active: 'bg-blue-50 text-blue-700 border border-blue-200',
-  inactive: 'bg-red-50 text-red-600 border border-red-200',
+  active: 'bg-blue-50 w-22 justify-center text-blue-700 border border-blue-200',
+  inactive: 'bg-red-50 w-22 justify-center text-red-600 border border-red-200',
 };
 
 const EmployeeStatusBadge: React.FC<{ status: EmployeeStatus }> = ({ status }) => {
@@ -49,8 +49,6 @@ export default function EmployeeTable({
   onSelectAll,
   onSelectOne,
   onSort,
-  onViewEmployee,
-  onEditEmployee,
   onDeleteEmployee,
   onDeleteSelected,
 }: EmployeeTableProps) {
@@ -117,7 +115,7 @@ export default function EmployeeTable({
               <th className="py-3.5 px-5 text-xs font-semibold text-text-secondary uppercase tracking-wider">
                 CONTACT
               </th>
-              <th className="py-3.5 px-5 text-xs font-semibold text-text-secondary uppercase tracking-wider">
+              <th className="py-3.5 px-5 text-xs font-semibold text-text-secondary uppercase tracking-wider text-center">
                 STATUS
               </th>
               <th className="py-3.5 px-5 text-xs font-semibold text-text-secondary uppercase tracking-wider text-right">
@@ -170,7 +168,7 @@ export default function EmployeeTable({
                         className="flex items-center gap-3 group"
                       >
 
-                        <div className="w-12 h-12 rounded-full border border-border overflow-hidden bg-slate-100 flex items-center justify-center shrink-0 shadow-2xs">
+                        <div className="w-10 h-10 rounded-full border border-border overflow-hidden bg-slate-100 flex items-center justify-center shrink-0 shadow-2xs">
                           <Avatar
                             avatar={employee.avatar}
                             name={employee.name}
@@ -210,7 +208,7 @@ export default function EmployeeTable({
                       )}
                     </td>
 
-                    <td className="py-4 px-5">
+                    <td className="py-4 px-5 text-center">
                       <EmployeeStatusBadge status={employee.status} />
                     </td>
 

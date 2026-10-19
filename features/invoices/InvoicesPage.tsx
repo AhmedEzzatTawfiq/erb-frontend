@@ -83,28 +83,6 @@ export default function InvoicesPage() {
     
   };
 
-  if (isLoading) {
-    return (
-      <main className="space-y-6 max-w-7xl mx-auto pb-10">
-        <InvoiceHeader />
-        <div className="flex items-center justify-center py-24 text-slate-400 text-sm">
-          Loading invoices…
-        </div>
-      </main>
-    );
-  }
-
-  if (isError) {
-    return (
-      <main className="space-y-6 max-w-7xl mx-auto pb-10">
-        <InvoiceHeader />
-        <div className="flex items-center justify-center py-24 text-red-500 text-sm">
-          Failed to load invoices. Please try again.
-        </div>
-      </main>
-    );
-  }
-
   return (
     <main className="space-y-6 max-w-7xl mx-auto pb-10">
       <InvoiceHeader />
@@ -118,8 +96,6 @@ export default function InvoicesPage() {
         setDateFrom={setDateFrom}
         dateTo={dateTo}
         setDateTo={setDateTo}
-        showMoreFilters={showMoreFilters}
-        setShowMoreFilters={setShowMoreFilters}
         onResetFilters={() => {
           setSearchTerm('');
           setStatusFilter('All Statuses');

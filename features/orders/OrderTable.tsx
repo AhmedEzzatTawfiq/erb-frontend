@@ -33,7 +33,7 @@ const ORDER_STATUS_STYLES: Record<OrderStatus, string> = {
 const FALLBACK_STATUS_STYLE = 'bg-red-50 text-red-600 border border-red-200';
 
 const OrderStatusBadge: React.FC<{ status: string }> = ({ status }) => (
-  <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold capitalize ${ORDER_STATUS_STYLES[status as OrderStatus] ?? FALLBACK_STATUS_STYLE}`}>
+  <span className={`inline-flex min-w-24 justify-center items-center px-2.5 py-1 rounded-lg text-xs font-semibold capitalize ${ORDER_STATUS_STYLES[status as OrderStatus] ?? FALLBACK_STATUS_STYLE}`}>
     {status}
   </span>
 );
@@ -112,7 +112,7 @@ export default function OrderTable({
                 onClick={() => onSort('totalAmount')}
                 className="py-3.5 px-5 text-xs font-semibold text-text-secondary uppercase tracking-wider text-right cursor-pointer select-none hover:text-text-main transition-colors"
               >
-                <div className="flex items-center justify-end gap-1.5">
+                <div className="flex items-center gap-1.5">
                   <span>TOTAL</span>
                   <ArrowUpDown className="w-3 h-3 text-text-muted" />
                 </div>
@@ -125,7 +125,7 @@ export default function OrderTable({
               </th>
               <th className="py-3.5 px-5 text-xs font-semibold text-text-secondary uppercase tracking-wider text-right">
                 ACTIONS
-              </th>
+              </th> 
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
@@ -188,7 +188,7 @@ export default function OrderTable({
                       </div>
                     </td>
 
-                    <td className="py-4 px-5 text-right text-sm font-bold text-text-main">
+                    <td className="py-4 px-5 text-sm font-bold text-text-main">
                       {formatCurrency(Number(order.totalAmount))}
                     </td>
 

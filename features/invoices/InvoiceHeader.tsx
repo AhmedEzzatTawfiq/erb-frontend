@@ -8,6 +8,7 @@ export default function InvoiceHeader() {
     <PageHeader
       title="Invoices"
       subtitle="Invoices are generated automatically upon order creation."
+      
     />
   );
 }

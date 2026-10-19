@@ -32,12 +32,30 @@ export default function UsersPage() {
     page: currentPage,
     limit: pageSize,
     search: searchTerm,
+    status: statusFilter !== 'All Statuses' ? statusFilter.toLowerCase() as 'active' | 'inactive' : undefined,
+    role: roleFilter !== 'All Roles' ? roleFilter.toLowerCase() as 'admin' | 'manager' | 'employee' : undefined,
     sortField: sortField,
     sortOrder: sortOrder,
   })
 
-  const users = data?.data ?? [];
-  const totalCount = data?.meta?.totalCount ?? data?.meta?.total ?? 0;
+  const rawUsers = data?.data ?? [];
+  const users = rawUsers.map((user: any) => ({
+    ...user,
+    role: user.role
+      ? user.role.charAt(0).toUpperCase() + user.role.slice(1).toLowerCase()
+      : user.role,
+    status: user.status
+      ? user.status.charAt(0).toUpperCase() + user.status.slice(1).toLowerCase()
+      : user.status,
+    created: user.createdAt
+      ? new Date(user.createdAt).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+        })
+      : user.created ?? '—',
+  }));
+  const totalCount = data?.meta?.total ?? data?.meta?.totalCount ?? 0;
   const totalPages = data?.meta?.totalPages ?? 1;
 
 
@@ -92,7 +110,7 @@ export default function UsersPage() {
   };
 
   return (
-    <main className="space-y-6 max-w-7xl mx-auto pb-10">
+    <main className="space-y-6 max-w-7xl mx-auto pb-10"> 
       <UserHeader />
 
       <div className="bg-white border border-border rounded-xl shadow-xs overflow-hidden">

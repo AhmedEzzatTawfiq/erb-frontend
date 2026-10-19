@@ -52,6 +52,28 @@ export default function ProductFilters({
           className="w-full md:max-w-md"
         />
 
+        {/* Low Stock toggle */}
+        <div className="flex items-center gap-3">
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <div
+              role="checkbox"
+              aria-checked={lowStock}
+              onClick={() => {
+                setLowStock(!lowStock);
+                onPageReset();
+              }}
+              className={`w-9 h-5 rounded-full transition-colors cursor-pointer ${lowStock ? 'bg-primary' : 'bg-slate-200'
+                } relative`}
+            >
+              <span
+                className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${lowStock ? 'translate-x-4' : 'translate-x-0'
+                  }`}
+              />
+            </div>
+            <span className="text-xs font-semibold text-text-secondary">Low Stock Only</span>
+          </label>
+        </div>
+
         <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
           <FilterSelect
             value={categoryId}
@@ -63,50 +85,6 @@ export default function ProductFilters({
             className="min-w-37.5 flex-1 sm:flex-initial"
           />
 
-          {/* More Filters toggle */}
-          <button
-            type="button"
-            onClick={() => setShowMoreFilters(!showMoreFilters)}
-            className={`py-2.5 px-4 bg-white border rounded-xl text-sm font-semibold flex items-center
-               justify-center gap-2 transition-all shadow-2xs ${
-              showMoreFilters
-                ? 'border-primary text-primary bg-blue-50/50'
-                : 'border-border text-text-secondary hover:bg-slate-50'
-            }`}
-          >
-            <Filter className="w-4 h-4 text-text-secondary" />
-            <span>More</span>
-          </button>
-        </div>
-
-      </div>
-
-      {showMoreFilters && (
-        <div className="pt-4 border-t border-border grid grid-cols-1 sm:grid-cols-3 gap-4 animate-in fade-in duration-200">
-          {/* Low Stock toggle */}
-          <div className="flex items-center gap-3">
-            <label className="flex items-center gap-2 cursor-pointer select-none">
-              <div
-                role="checkbox"
-                aria-checked={lowStock}
-                onClick={() => {
-                  setLowStock(!lowStock);
-                  onPageReset();
-                }}
-                className={`w-9 h-5 rounded-full transition-colors cursor-pointer ${
-                  lowStock ? 'bg-primary' : 'bg-slate-200'
-                } relative`}
-              >
-                <span
-                  className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
-                    lowStock ? 'translate-x-4' : 'translate-x-0'
-                  }`}
-                />
-              </div>
-              <span className="text-xs font-semibold text-text-secondary">Low Stock Only</span>
-            </label>
-          </div>
-
           <div className="flex items-end sm:col-start-3">
             <button
               type="button"
@@ -117,7 +95,9 @@ export default function ProductFilters({
             </button>
           </div>
         </div>
-      )}
+
+      </div>
+
     </div>
   );
 }

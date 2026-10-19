@@ -86,10 +86,10 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-2 items-start">
         {/* Left 2 Columns: Charts & Recent Activity */}
         <div className="lg:col-span-2 space-y-6">
-          <DashboardCharts
+          {/* <DashboardCharts
             charts={dashboardData?.charts}
             isLoading={isLoading}
-          />
+          /> */}
           <DashboardRecentActivity
             activities={dashboardData?.recentActivities}
             isLoading={isLoading}

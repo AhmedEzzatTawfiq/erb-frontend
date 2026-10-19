@@ -18,10 +18,9 @@ interface EmployeeFiltersProps {
 
 
 const STATUS_OPTIONS = [
-  { label: 'All Statuses', value: 'All Statuses' },
-  { label: 'Active', value: 'Active' },
-  { label: 'On Leave', value: 'On Leave' },
-  { label: 'Terminated', value: 'Terminated' },
+  { label: 'All Statuses', value: '' },
+  { label: 'Active', value: 'active' },
+  { label: 'Inactive', value: 'inactive' },
 ];
 
 export default function EmployeeFilters({
@@ -72,11 +71,8 @@ export default function EmployeeFilters({
             onPageReset();
           }}
           options={STATUS_OPTIONS}
-          // label="Status"
         />
 
-        {/* Reset */}
-        {(searchTerm || departmentId || statusFilter !== 'All Statuses') && (
           <button
             type="button"
             onClick={onResetFilters}
@@ -84,7 +80,6 @@ export default function EmployeeFilters({
           >
             Reset filters
           </button>
-        )}
       </div>
     </div>
   );

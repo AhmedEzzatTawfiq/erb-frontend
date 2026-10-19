@@ -119,7 +119,7 @@ export default function SupplierTable({
                 CONTACT INFO
               </th>
               <th className="py-3.5 px-5 text-xs font-semibold text-text-secondary uppercase tracking-wider">
-                PRODUCTS SUPPLIED
+                CATEGORY
               </th>
               <th className="py-3.5 px-5 text-xs font-semibold text-text-secondary uppercase tracking-wider text-center">
                 STATUS

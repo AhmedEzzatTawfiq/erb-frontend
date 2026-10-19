@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
+import { isAxiosError } from 'axios';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ChevronRight, ChevronDown, Sparkles, Check } from 'lucide-react';
+import { ChevronRight, ChevronDown, Sparkles, AlertCircle } from 'lucide-react';
 import { useCreateUser } from './hooks/useCreateUser';
 
 export default function CreateUserPage() {
@@ -11,6 +12,8 @@ export default function CreateUserPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [avatar, setAvatar] = useState<string | null>();
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -18,14 +21,11 @@ export default function CreateUserPage() {
     email: '',
     password: '',
     role: '',
-    status: '',
+    status: 'active',
   });
 
   const {
-    mutate: createUser,
-    isPending,
-    isError,
-    error,
+    mutateAsync: createUserAsync,
   } = useCreateUser();
 
 
@@ -44,8 +44,13 @@ export default function CreateUserPage() {
     fileInputRef.current?.click();
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
+    setSubmitError(null);
 
     const payload = {
       name: `${formData.firstName} ${formData.lastName}`,
@@ -56,11 +61,24 @@ export default function CreateUserPage() {
       avatar: avatar ?? undefined,
     };
 
-    createUser(payload, {
-      onSuccess: () => {
-        router.push('/users');
-      },
-    });
+    try {
+      await createUserAsync(payload);
+      router.push('/users');
+    } catch (err) {
+      console.error('User creation failed:', err);
+
+      const backendMessage =
+        isAxiosError(err) && err.response?.data?.message
+          ? Array.isArray(err.response.data.message)
+            ? err.response.data.message.join(', ')
+            : String(err.response.data.message)
+          : err instanceof Error
+          ? err.message
+          : 'Failed to create user. Please try again.';
+
+      setSubmitError(backendMessage);
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -135,7 +153,7 @@ export default function CreateUserPage() {
                   Upload Photo
                 </button>
                 <p className="text-xs text-slate-400 mt-2 font-normal">
-                  JPG, GIF or PNG. Max size of 800K
+                  JPG, PNG or WEBP. Max size of 5MB
                 </p>
               </div>
             </div>
@@ -212,7 +230,7 @@ export default function CreateUserPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, password: e.target.value })
                   }
-                  placeholder="••••••••"
+                  placeholder="password"
                   className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm
                    text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
                 />
@@ -256,6 +274,9 @@ export default function CreateUserPage() {
                     className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900
                      focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all appearance-none pr-10 cursor-pointer"
                   >
+                    <option value="" disabled hidden>
+                      Select Status
+                    </option>
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
                   </select>
@@ -265,33 +286,37 @@ export default function CreateUserPage() {
             </div>
           </div>
 
+          {submitError && (
+            <p
+              role="alert"
+              className="text-sm text-red-600 flex items-center gap-2"
+            >
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              {submitError}
+            </p>
+          )}
+
+          {/* Footer Actions */}
           <div className="pt-6 border-t border-slate-100 flex items-center justify-end gap-3">
+
             <button
               type="button"
               onClick={() => router.push('/users')}
-              className="px-4 py-2.5 text-sm font-medium text-slate-600 hover:text-slate-900
-               hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+              className="px-4 py-2.5 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={isPending}
-              className="px-5 py-2.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-sm font-medium
-               rounded-lg shadow-xs hover:shadow transition-all cursor-pointer flex items-center gap-2 disabled:opacity-75"
+              disabled={isSubmitting}
+              className="px-5 py-2.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-sm font-medium rounded-lg shadow-xs hover:shadow transition-all cursor-pointer flex items-center gap-2 disabled:opacity-75"
             >
-              {isPending ? (
+              {isSubmitting ? (
                 <span>Creating...</span>
               ) : (
                 <span>Create User</span>
               )}
-              {isError && (
-                <p className="text-sm text-red-600">
-                  {error instanceof Error
-                    ? error.message
-                    : 'Failed to create user'}
-                </p>
-              )}
+
             </button>
           </div>
         </form>
