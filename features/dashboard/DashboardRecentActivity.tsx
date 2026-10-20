@@ -93,7 +93,7 @@ export default function DashboardRecentActivity({
                   </td>
                   <td className="py-3.5 px-5">
                     <span
-                      className={`inline-flex w-22 justify-center py-0.5 rounded-md text-xs font-semibold border ${getStatusBadge(
+                      className={`inline-flex w-20 justify-center py-0.5 rounded-md text-xs font-semibold border ${getStatusBadge(
                         activity.status
                       )}`}
                     >

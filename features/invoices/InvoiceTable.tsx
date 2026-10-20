@@ -126,7 +126,7 @@ export default function InvoiceTable({
                   <ArrowUpDown className="w-3 h-3 text-text-muted" />
                 </div>
               </th>
-              <th className="py-3.5 px-5 text-xs font-semibold text-text-secondary uppercase tracking-wider ">
+              <th className="py-3.5 px-5 text-xs font-semibold text-text-secondary uppercase tracking-wider text-center">
                 STATUS
               </th>
               <th
@@ -205,7 +205,7 @@ export default function InvoiceTable({
                       {invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString() : '—'}
                     </td>
 
-                    <td className="py-4 px-5">
+                    <td className="py-4 px-5 text-center">
                       <InvoiceStatusBadge status={invoice.status} />
                     </td>
 

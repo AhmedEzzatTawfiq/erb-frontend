@@ -8,6 +8,7 @@ import DashboardQuickActions from './DashboardQuickActions';
 import DashboardRecentActivity from './DashboardRecentActivity';
 import { useDashboardOverview } from './hooks/useDashboard';
 import { CheckCircle2, X, AlertTriangle, RefreshCw } from 'lucide-react';
+import DashboardSkeleton from '@/components/ui/DashboardSkeleton';
 
 export default function DashboardPage() {
   const { data: dashboardData, isLoading, isError, error, refetch, isFetching } = useDashboardOverview();
@@ -28,6 +29,14 @@ export default function DashboardPage() {
     refetch();
     showToast('Dashboard data refreshed.');
   };
+
+  if (isLoading && !dashboardData) {
+    return (
+      <main className="mx-auto max-w-7xl pb-10">
+        <DashboardSkeleton />
+      </main>
+    );
+  }
 
   return (
     <main className="space-y-6 max-w-7xl mx-auto pb-10 relative">

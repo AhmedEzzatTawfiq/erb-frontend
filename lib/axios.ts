@@ -111,6 +111,7 @@ api.interceptors.response.use(
 
         if (originalRequest._retry) {
             clearAccessToken();
+            notifyAuthExpired();
 
             return Promise.reject(error);
         }

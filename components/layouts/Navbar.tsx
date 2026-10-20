@@ -61,7 +61,7 @@ export default function Navbar({ onToggleMobileMenu }: NavbarProps = {}) {
         </div>
       </div>
 
-      <div className="flex-1 max-w-md mx-auto md:mx-0 md:ml-auto md:mr-auto">
+      {/* <div className="flex-1 max-w-md mx-auto md:mx-0 md:ml-auto md:mr-auto">
         <div className="relative">
           <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted" />
           <input
@@ -70,25 +70,9 @@ export default function Navbar({ onToggleMobileMenu }: NavbarProps = {}) {
             className="w-full pl-10 pr-4 py-2 text-sm bg-white border border-border rounded-lg placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all shadow-2xs"
           />
         </div>
-      </div>
+      </div> */}
 
       <div className="flex items-center gap-3">
-        {/* <button
-          type="button"
-          aria-label="Notifications"
-          className="p-2 text-text-secondary hover:text-text-main hover:bg-border-subtle rounded-full transition-colors relative"
-        >
-          <Bell className="w-5 h-5" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full ring-2 ring-white" />
-        </button> */}
-
-        {/* <button
-          type="button"
-          aria-label="Help"
-          className="p-2 text-text-secondary hover:text-text-main hover:bg-border-subtle rounded-full transition-colors hidden sm:block"
-        >
-          <HelpCircle className="w-5 h-5" />
-        </button> */}
 
         {/* User Profile Dropdown Menu */}
         <div className="pl-1 relative" ref={dropdownRef}>
@@ -100,8 +84,14 @@ export default function Navbar({ onToggleMobileMenu }: NavbarProps = {}) {
               aria-expanded={isOpen}
               aria-label="User menu"
             >
-              <div className="w-9 h-9 rounded-full bg-linear-to-br from-primary to-primary-dark text-white font-bold text-xs flex items-center justify-center border border-primary/20 shadow-2xs group-hover:scale-105 transition-transform">
-                {initials}
+              <div className="w-9 h-9 rounded-full border border-primary/20 shadow-2xs group-hover:scale-105 transition-transform overflow-hidden shrink-0">
+                {user.avatar ? (
+                  <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full bg-linear-to-br from-primary to-primary-dark text-white font-bold text-xs flex items-center justify-center">
+                    {initials}
+                  </div>
+                )}
               </div>
               <div className="hidden md:flex flex-col text-left">
                 <span className="text-xs font-bold text-text-main leading-none truncate max-w-30">

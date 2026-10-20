@@ -76,7 +76,7 @@ export default function CreateSupplierPage() {
         phone: formData.phone,
         address: formData.address,
         status: formData.status,
-        productsSupplied: formData.categoryId ? [formData.categoryId] : [],
+        categoryId: formData.categoryId,
       },
       {
         onSuccess: () => {

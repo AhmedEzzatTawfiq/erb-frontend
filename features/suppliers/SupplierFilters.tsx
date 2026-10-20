@@ -46,19 +46,21 @@ export default function SupplierFilters({
   ];
 
   return (
-    <div className="bg-[#F8FAFC]/60 border border-border rounded-2xl p-4 md:p-5 shadow-2xs space-y-4">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+    <div className="bg-white border border-border rounded-2xl p-4 md:p-5 shadow-2xs space-y-4">
+      <div className="flex flex-wrap gap-3 items-end">
 
         {/* Search */}
-        <SearchInput
-          value={searchTerm}
-          onChange={(val) => {
-            setSearchTerm(val);
-            onPageReset();
-          }}
-          placeholder="Company, Contact, or Email..."
-          className="w-full"
-        />
+        <div className="flex-1 min-w-50">
+          <SearchInput
+            value={searchTerm}
+            onChange={(val) => {
+              setSearchTerm(val);
+              onPageReset();
+            }}
+            placeholder="Company, Contact, or Email..."
+            className="w-full flex-1"
+          />
+        </div>
 
         {/* Status Select */}
         <FilterSelect

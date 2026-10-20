@@ -154,8 +154,18 @@ export default function ProfilePage() {
         <div className="absolute -right-16 -top-16 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
 
         <div className="flex items-center gap-5 relative z-10">
-          <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-linear-to-br from-primary to-primary-dark text-white font-bold text-2xl md:text-3xl flex items-center justify-center shadow-md ring-4 ring-primary-light/50 shrink-0">
-            {initials}
+          <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl shadow-md ring-4 ring-primary-light/50 shrink-0 overflow-hidden">
+            {user.avatar ? (
+              <img
+                src={user.avatar}
+                alt={user.name}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-linear-to-br from-primary to-primary-dark text-white font-bold text-2xl md:text-3xl flex items-center justify-center">
+                {initials}
+              </div>
+            )}
           </div>
 
           <div className="space-y-1.5">

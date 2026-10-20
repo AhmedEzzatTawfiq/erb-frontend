@@ -120,14 +120,20 @@ export default function Sidebar({ mobileOpen = false, setMobileOpen }: SidebarPr
         </nav>
 
         {/* Bottom User Card */}
-        {user && (
+        {/* {user && (
           <div className="p-3 border-t border-border-subtle m-3 bg-slate-50/80 rounded-xl space-y-2">
             <Link
               href="/profile"
               className="flex items-center gap-3 p-1.5 rounded-lg hover:bg-white transition-colors group"
             >
-              <div className="w-9 h-9 rounded-lg bg-linear-to-br from-primary to-primary-dark text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-2xs">
-                {initials}
+              <div className="w-9 h-9 rounded-lg shrink-0 shadow-2xs overflow-hidden">
+                {user.avatar ? (
+                  <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full bg-linear-to-br from-primary to-primary-dark text-white font-bold text-xs flex items-center justify-center">
+                    {initials}
+                  </div>
+                )}
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-bold text-text-main truncate group-hover:text-primary transition-colors">
@@ -148,7 +154,7 @@ export default function Sidebar({ mobileOpen = false, setMobileOpen }: SidebarPr
               <span>Logout</span>
             </button>
           </div>
-        )}
+        )} */}
       </aside>
     </>
   );

@@ -12,6 +12,8 @@ export interface Supplier {
   initialsBg?: string;
   avatar?: string | null;
   joinedDate?: string;
+  categoryId?: string | null;
+  category?: { id: string; name: string } | null;
 }
 
 export interface CreateSupplierInput {
@@ -24,6 +26,7 @@ export interface CreateSupplierInput {
   productsSupplied?: string[];
   status?: string;
   avatar?: string;
+  categoryId?: string;
 }
 
 export interface GetSuppliersParams {

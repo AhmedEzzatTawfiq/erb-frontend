@@ -33,14 +33,14 @@ export default function DashboardHeader({
               <span className="hidden sm:inline">Refresh</span>
             </button>
           )}
-          <button
+          {/* <button
             type="button"
             onClick={onExportReport}
             className="btn-secondary text-xs sm:text-sm shadow-2xs font-semibold"
           >
             <Download className="w-4 h-4 text-text-secondary" />
             <span>Export Report</span>
-          </button>
+          </button> */}
         </div>
       }
     />

@@ -194,25 +194,13 @@ export default function SupplierTable({
                     </td>
 
                     <td className="py-4 px-5">
-                      <div className="flex flex-wrap gap-1 max-w-50">
-                        {supplier.productsSupplied && supplier.productsSupplied.length > 0 ? (
-                          supplier.productsSupplied.slice(0, MAX_TAGS_SHOWN).map((prod) => (
-                            <span
-                              key={prod}
-                              className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100"
-                            >
-                              {prod}
-                            </span>
-                          ))
-                        ) : (
-                          <span className="text-xs text-text-muted">—</span>
-                        )}
-                        {supplier.productsSupplied && supplier.productsSupplied.length > MAX_TAGS_SHOWN && (
-                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600">
-                            +{supplier.productsSupplied.length - MAX_TAGS_SHOWN}
-                          </span>
-                        )}
-                      </div>
+                      {supplier.category ? (
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-violet-50 text-violet-700 border border-violet-100">
+                          {supplier.category.name}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-text-muted">—</span>
+                      )}
                     </td>
                     <td className="py-4 px-5 text-center">
                       <StatusBadge status={supplier.status} />
