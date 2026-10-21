@@ -187,7 +187,7 @@ export default function CustomerTable({
                     </td>
 
                     <td className="py-4 px-5 text-center">
-                      <CustomerStatusBadge status={customer.status} />
+                      <CustomerStatusBadge status={customer.status ?? 'inactive'} />
                     </td>
 
                     {/* Actions */}

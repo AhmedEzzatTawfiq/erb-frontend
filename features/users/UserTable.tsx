@@ -23,8 +23,8 @@ interface UserTableProps {
 }
 
 const STATUS_STYLES: Record<UserStatus, string> = {
-  Active: 'badge-success',
-  Inactive: 'bg-border-subtle text-[#64748B]',
+  active: 'badge-success',
+  inactive: 'bg-border-subtle text-[#64748B]',
 };
 
 const ROLE_STYLES: Record<string, string> = {

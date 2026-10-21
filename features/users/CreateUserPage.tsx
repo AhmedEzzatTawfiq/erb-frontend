@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ChevronRight, ChevronDown, Sparkles, AlertCircle } from 'lucide-react';
 import { useCreateUser } from './hooks/useCreateUser';
+import { UserRole, UserStatus } from './types';
 
 export default function CreateUserPage() {
   const router = useRouter();
@@ -56,8 +57,8 @@ export default function CreateUserPage() {
       name: `${formData.firstName} ${formData.lastName}`,
       email: formData.email,
       password: formData.password,
-      role: formData.role,
-      status: formData.status,
+      role: formData.role as UserRole,
+      status: formData.status as UserStatus,
       avatar: avatar ?? undefined,
     };
 

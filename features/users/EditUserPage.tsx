@@ -8,6 +8,7 @@ import { useUser } from './hooks/useUser';
 import { useUpdateUser } from './hooks/useUpdateUser';
 import { useUploadUserAvatar, useDeleteUserAvatar } from './hooks/useUploadUserImage';
 import { useImageUpload } from '@/hooks/useImageUpload';
+import { UserRole, UserStatus } from './types';
 
 export default function EditUserPage() {
   const router = useRouter();
@@ -112,8 +113,8 @@ export default function EditUserPage() {
         name: `${formData.firstName} ${formData.lastName}`.trim(),
         email: formData.email,
         ...(formData.password && { password: formData.password }),
-        role: formData.role,
-        status: formData.status,
+        role: formData.role as UserRole,
+        status: formData.status as UserStatus,
       };
 
       await updateUserAsync({ id: userId, data: payload });
