@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { User, UserStatus } from './types';
-import { ArrowUpDown, Users, Trash2, MoreVertical } from 'lucide-react';
+import { ArrowUpDown, Users, Trash2, MoreVertical, ShieldOff } from 'lucide-react';
 import ActionDropDown from '@/components/shared/ActionDropDown';
 import Avatar from '@/components/shared/Avatar';
 
@@ -20,6 +20,7 @@ interface UserTableProps {
   onEditUser?: (user: User) => void;
   onDeleteUser: (id: string) => void;
   onDeleteSelected: () => void;
+  isUnauthorized?: boolean;
 }
 
 const STATUS_STYLES: Record<UserStatus, string> = {
@@ -44,6 +45,7 @@ export default function UserTable({
   onSort,
   onDeleteUser,
   onDeleteSelected,
+  isUnauthorized = false,
 }: UserTableProps) {
   return (
     <div>
@@ -122,7 +124,19 @@ export default function UserTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {users.length === 0 ? (
+            {isUnauthorized ? (
+              <tr>
+                <td colSpan={6} className="py-16 text-center text-text-secondary border border-red-200">
+                  <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-red-50 border border-red-100 mb-3">
+                    <ShieldOff className="w-7 h-7 text-red-400" />
+                  </div>
+                  <p className="font-semibold text-base text-slate-700">Access Denied</p>
+                  <p className="text-xs text-text-muted mt-1 max-w-xs mx-auto">
+                    You don&apos;t have permission to view this page. Please contact your administrator.
+                  </p>
+                </td>
+              </tr>
+            ) : users.length === 0 ? (
               <tr>
                 <td colSpan={6} className="py-12 text-center text-text-secondary">
                   <Users className="w-10 h-10 mx-auto text-[#CBD5E1] mb-2" />

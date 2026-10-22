@@ -7,8 +7,11 @@ import UserTable from './UserTable';
 import Pagination from '@/components/shared/Pagination';
 import { useUsers } from './hooks/useUsers';
 import { useDeleteUser } from './hooks/useDeleteUser';
+import { useAuth } from '@/features/auth/AuthProvider';
 
 export default function UsersPage() {
+  const { user } = useAuth();
+  const isUnauthorized = user?.role !== 'admin';
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('All Roles');
   const [statusFilter, setStatusFilter] = useState('All Statuses');
@@ -143,6 +146,7 @@ export default function UsersPage() {
           onEditUser={() => { }}
           onDeleteUser={handleDeleteUser}
           onDeleteSelected={handleDeleteSelected}
+          isUnauthorized={isUnauthorized}
         />
 
         <Pagination

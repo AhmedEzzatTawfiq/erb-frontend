@@ -7,3 +7,9 @@ export async function getDepartments(): Promise<Department[]> {
 
   return response.data;
 }
+
+export async function createDepartment(name: string): Promise<Department> {
+  const response = await api.post('/departments', { name });
+
+  return response.data;
+}

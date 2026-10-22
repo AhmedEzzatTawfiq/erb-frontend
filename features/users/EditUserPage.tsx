@@ -75,7 +75,6 @@ export default function EditUserPage() {
     firstName: '',
     lastName: '',
     email: '',
-    password: '',
     role: '',
     status: 'active',
   });
@@ -91,7 +90,6 @@ export default function EditUserPage() {
       firstName: first,
       lastName: last,
       email: userData.email || '',
-      password: '',
       role: userData.role?.toLowerCase() || '',
       status: userData.status?.toLowerCase() || 'active',
     });
@@ -112,7 +110,6 @@ export default function EditUserPage() {
       const payload = {
         name: `${formData.firstName} ${formData.lastName}`.trim(),
         email: formData.email,
-        ...(formData.password && { password: formData.password }),
         role: formData.role as UserRole,
         status: formData.status as UserStatus,
       };
@@ -291,22 +288,6 @@ export default function EditUserPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, email: e.target.value })
                   }
-                  className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm
-                   text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
-                />
-              </div>
-
-              <div>
-                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
-                  NEW PASSWORD
-                </label>
-                <input
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) =>
-                    setFormData({ ...formData, password: e.target.value })
-                  }
-                  placeholder="Leave blank to keep current"
                   className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm
                    text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
                 />

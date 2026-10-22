@@ -102,7 +102,7 @@ export default function CreateUserPage() {
 
       {/* Card Form */}
       <div className="bg-white border border-slate-200 rounded-xl shadow-2xs p-6 md:p-8">
-        <form onSubmit={handleSubmit} className="space-y-8">
+        <form onSubmit={handleSubmit} className="space-y-8" autoComplete="off">
           <div>
             <h2 className="text-base font-bold text-slate-900 mb-4">
               Profile Picture
@@ -210,6 +210,7 @@ export default function CreateUserPage() {
                 <input
                   type="email"
                   required
+                  autoComplete="new-password"
                   value={formData.email}
                   onChange={(e) =>
                     setFormData({ ...formData, email: e.target.value })
@@ -225,8 +226,9 @@ export default function CreateUserPage() {
                   PASSWORD
                 </label>
                 <input
-                  type="password"
+                  // type="password"
                   required
+                  autoComplete="new-password"
                   value={formData.password}
                   onChange={(e) =>
                     setFormData({ ...formData, password: e.target.value })

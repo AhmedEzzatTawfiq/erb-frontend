@@ -16,13 +16,13 @@ export default function EmployeeHeader({ onAddEmployee }: EmployeeHeaderProps) {
       subtitle="Manage your organizational workforce and access records."
       actions={
         <div className="flex items-center gap-2">
-          <button
+          {/* <button
             type="button"
             className="btn-secondary text-xs sm:text-sm font-semibold shadow-xs hover:shadow transition-all"
           >
             <Download className="w-4 h-4" />
             <span>Export</span>
-          </button>
+          </button> */}
           <RoleGuard allowedRoles={['admin']}>
             <Link
               href="/employees/create"

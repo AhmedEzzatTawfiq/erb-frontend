@@ -4,9 +4,9 @@ import { useState } from 'react';
 import { isAxiosError } from 'axios';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ChevronRight, ChevronDown, Sparkles, Trash2, AlertCircle } from 'lucide-react';
+import { ChevronRight, ChevronDown, Sparkles, Trash2, AlertCircle, FolderPlus } from 'lucide-react';
 import { useCreateEmployee } from './hooks/useCreateEmployee';
-import { useDepartments } from '../departments/hooks/useDepartments';
+import { useDepartments, useCreateDepartment } from '../departments/hooks/useDepartments';
 import { useUploadEmployeeAvatar } from './hooks/useUploadEmployeeImage';
 import { CreateEmployeeInput, EmployeeStatus } from './types';
 import { useImageUpload } from '@/hooks/useImageUpload';
@@ -39,8 +39,14 @@ export default function CreateEmployeePage() {
   } = useCreateEmployee();
 
   const {
-    data: departments,
+    data: departments = [],
   } = useDepartments();
+
+  const { mutateAsync: createDepartmentMutation, isPending: isCreatingDepartment } = useCreateDepartment();
+
+  const [newDepartmentName, setNewDepartmentName] = useState('');
+  const [showAddDepartment, setShowAddDepartment] = useState(false);
+  const [departmentError, setDepartmentError] = useState('');
 
   const {
     mutateAsync: uploadAvatar,
@@ -61,6 +67,22 @@ export default function CreateEmployeePage() {
   });
 
 
+  const handleCreateDepartment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setDepartmentError('');
+    if (!newDepartmentName.trim()) return;
+
+    try {
+      const newDept = await createDepartmentMutation(newDepartmentName.trim());
+      setFormData((prev) => ({ ...prev, departmentId: newDept.id }));
+      setNewDepartmentName('');
+      setShowAddDepartment(false);
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || 'Failed to create department';
+      setDepartmentError(Array.isArray(msg) ? msg.join(', ') : msg);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -79,7 +101,7 @@ export default function CreateEmployeePage() {
           email: formData.email,
           phone: formData.phone,
           address: formData.address,
-          departmentId: formData.departmentId,
+          ...(formData.departmentId ? { departmentId: formData.departmentId } : {}),
           jobTitle: formData.position,
           hireDate: new Date().toISOString(),
           salary: Number(formData.salary),
@@ -110,8 +132,8 @@ export default function CreateEmployeePage() {
               ? err.response.data.message.join(', ')
               : String(err.response.data.message)
             : err instanceof Error
-            ? err.message
-            : 'Failed to create employee. Please try again.';
+              ? err.message
+              : 'Failed to create employee. Please try again.';
         setSubmitError(backendMessage);
       }
 
@@ -305,7 +327,7 @@ export default function CreateEmployeePage() {
                   onChange={(e) =>
                     setFormData({ ...formData, phone: e.target.value })
                   }
-                  placeholder="+1 (555) 000-0000"
+                  placeholder="+20"
                   className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm
                    text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
                 />
@@ -324,30 +346,64 @@ export default function CreateEmployeePage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
 
               <div>
-                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
-                  DEPARTMENT *
-                </label>
-                <div className="relative">
-                  <select
-                    required
-                    value={formData.departmentId}
-                    onChange={(e) =>
-                      setFormData({ ...formData, departmentId: e.target.value })
-                    }
-                    className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all appearance-none pr-10 cursor-pointer"
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
+                    DEPARTMENT *
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddDepartment(!showAddDepartment)}
+                    className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 cursor-pointer"
                   >
-
-                    <option value="" disabled hidden>
-                      Select Department
-                    </option>
-                    {departments?.map((department) => (
-                      <option key={department.id} value={department.id}>
-                        {department.name}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <FolderPlus className="w-3.5 h-3.5" />
+                    {showAddDepartment ? 'Cancel' : 'New Department'}
+                  </button>
                 </div>
+
+                {showAddDepartment ? (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      required
+                      value={newDepartmentName}
+                      onChange={(e) => setNewDepartmentName(e.target.value)}
+                      placeholder="Department name..."
+                      className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleCreateDepartment}
+                      disabled={isCreatingDepartment || !newDepartmentName.trim()}
+                      className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg disabled:opacity-50 cursor-pointer"
+                    >
+                      {isCreatingDepartment ? 'Saving...' : 'Add'}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <select
+                      required
+                      value={formData.departmentId}
+                      onChange={(e) =>
+                        setFormData({ ...formData, departmentId: e.target.value })
+                      }
+                      className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all appearance-none pr-10 cursor-pointer"
+                    >
+                      <option value="" disabled hidden>
+                        Select Department
+                      </option>
+                      {departments.map((department) => (
+                        <option key={department.id} value={department.id}>
+                          {department.name}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  </div>
+                )}
+                {departmentError && (
+                  <p className="text-xs text-red-600 mt-1">{departmentError}</p>
+                )}
               </div>
 
               <div>
@@ -361,7 +417,7 @@ export default function CreateEmployeePage() {
                   onChange={(e) =>
                     setFormData({ ...formData, position: e.target.value })
                   }
-                  placeholder="Senior Software Engineer"
+                  placeholder="Software Engineer"
                   className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
                 />
               </div>

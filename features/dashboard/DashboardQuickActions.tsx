@@ -30,7 +30,7 @@ export default function DashboardQuickActions({
           className="w-full py-2.5 px-4 border border-border rounded-lg text-sm font-semibold text-text-main hover:bg-border-subtle flex items-center justify-center gap-2 transition-colors cursor-pointer"
         >
           <UserPlus className="w-4 h-4 text-text-secondary" />
-          <span>Create User</span>
+          <span>Add User</span>
         </Link>
 
         <Link
@@ -39,7 +39,7 @@ export default function DashboardQuickActions({
           className="w-full py-2.5 px-4 border border-border rounded-lg text-sm font-semibold text-text-main hover:bg-border-subtle flex items-center justify-center gap-2 transition-colors cursor-pointer"
         >
           <Handshake className="w-4 h-4" />
-          <span>Create Customer</span>
+          <span>Add Customer</span>
         </Link>
 
         <Link
@@ -48,7 +48,7 @@ export default function DashboardQuickActions({
           className="w-full py-2.5 px-4 border border-border rounded-lg text-sm font-semibold text-text-main hover:bg-border-subtle flex items-center justify-center gap-2 transition-colors cursor-pointer"
         >
           <Truck className="w-4 h-4" />
-          <span>Create Supplier</span>
+          <span>Add Supplier</span>
         </Link>
 
         <Link
@@ -57,7 +57,7 @@ export default function DashboardQuickActions({
           className="w-full py-2.5 px-4 border border-border rounded-lg text-sm font-semibold text-text-main hover:bg-border-subtle flex items-center justify-center gap-2 transition-colors cursor-pointer"
         >
           <Package className="w-4 h-4" />
-          <span>Create Product</span>
+          <span>Add Product</span>
         </Link>
 
          <Link

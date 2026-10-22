@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import DashboardHeader from './DashboardHeader';
 import DashboardStats from './DashboardStats';
-import DashboardCharts from './DashboardCharts';
 import DashboardQuickActions from './DashboardQuickActions';
 import DashboardRecentActivity from './DashboardRecentActivity';
 import { useDashboardOverview } from './hooks/useDashboard';

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import {
   ChevronRight, Pencil, Mail, Phone, Globe,
-  Calendar, Package, Star, Loader2,
+  Package, Loader2,
 } from 'lucide-react';
 import { useSupplier } from './hooks/useSupplier';
 
@@ -39,10 +39,6 @@ export default function SupplierProfilePage() {
 
   const statusLabel = supplier.status ?? 'Active';
   const productsSupplied: string[] = supplier.productsSupplied ?? [];
-  const joinedDate = supplier.joinedDate
-    ? new Date(supplier.joinedDate).toLocaleDateString()
-    : '—';
-  const paymentTerms = supplier.paymentTerms ?? '—';
 
   return (
     <main className="space-y-6 max-w-7xl mx-auto pb-10">
@@ -138,61 +134,12 @@ export default function SupplierProfilePage() {
                 </span>
               </div>
 
-              <div className="flex items-center justify-between py-1 border-b border-slate-100 pb-2.5">
-                <div className="flex items-center gap-2 text-slate-500 font-medium">
-                  <Calendar className="w-4 h-4 text-slate-400 shrink-0" />
-                  <span>Vendor Since</span>
-                </div>
-                <span className="font-semibold text-slate-800">{joinedDate}</span>
-              </div>
-
-              <div className="flex items-center justify-between py-1">
-                <div className="flex items-center gap-2 text-slate-500 font-medium">
-                  <Star className="w-4 h-4 text-slate-400 shrink-0" />
-                  <span>Payment Terms</span>
-                </div>
-                <span className="font-semibold text-blue-600">{paymentTerms}</span>
-              </div>
             </div>
           </div>
         </div>
 
         {/* Right */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Stats */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 bg-white border border-slate-200 rounded-xl p-5 shadow-2xs">
-            <div>
-              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
-                Categories Supplied
-              </span>
-              <span className="text-sm font-bold text-slate-900 mt-1 block">
-                {productsSupplied.length} Active
-              </span>
-            </div>
-
-            <div>
-              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
-                Status
-              </span>
-              <span
-                className={`text-sm font-bold mt-1 block ${
-                  statusLabel === 'Active' ? 'text-emerald-600' : 'text-amber-600'
-                }`}
-              >
-                {statusLabel}
-              </span>
-            </div>
-
-            <div>
-              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
-                Payment Terms
-              </span>
-              <span className="text-sm font-bold text-blue-600 mt-1 block">
-                {paymentTerms}
-              </span>
-            </div>
-          </div>
-
           {/* Product Categories */}
           {productsSupplied.length > 0 && (
             <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-2xs space-y-4">

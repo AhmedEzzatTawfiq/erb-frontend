@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Employee, EmployeeStatus } from './types';
-import { ArrowUpDown, Users, MoreVertical, Trash2 } from 'lucide-react';
+import { ArrowUpDown, Users, MoreVertical, Trash2, ShieldOff } from 'lucide-react';
 import ActionDropDown from '@/components/shared/ActionDropDown';
 import Avatar from '@/components/shared/Avatar';
 import { useRouter } from 'next/navigation';
@@ -22,6 +22,7 @@ interface EmployeeTableProps {
   onEditEmployee: (employee: Employee) => void;
   onDeleteEmployee: (id: string) => void;
   onDeleteSelected: () => void;
+  isUnauthorized?: boolean;
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -51,6 +52,7 @@ export default function EmployeeTable({
   onSort,
   onDeleteEmployee,
   onDeleteSelected,
+  isUnauthorized = false,
 }: EmployeeTableProps) {
   const router = useRouter();
   return (
@@ -124,9 +126,23 @@ export default function EmployeeTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {employees.length === 0 ? (
+            {isUnauthorized ? (
               <tr>
-                <td colSpan={8} className="py-12 text-center text-text-secondary">
+                <td colSpan={7} className="py-16 text-center text-text-secondary border border-red-200">
+                  <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-red-50 border border-red-100 mb-3">
+                    <ShieldOff className="w-7 h-7 text-red-400" />
+                  </div>
+                  <p className="font-semibold text-base text-slate-700">
+                    Access Denied
+                  </p>
+                  <p className="text-xs text-text-muted mt-1 max-w-xs mx-auto">
+                    You don&apos;t have permission to view this page. Please contact your administrator.
+                  </p>
+                </td>
+              </tr>
+            ) : employees.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="py-12 text-center text-text-secondary">
                   <Users className="w-10 h-10 mx-auto text-[#CBD5E1] mb-2" />
                   <p className="font-semibold text-base">No employees found</p>
                   <p className="text-xs text-text-muted mt-0.5">
@@ -142,7 +158,7 @@ export default function EmployeeTable({
                   typeof employee.department === 'string'
                     ? employee.department
                     : employee.department?.name;
-                    
+
                 const pos = employee.jobTitle || 'Employee';
 
                 return (

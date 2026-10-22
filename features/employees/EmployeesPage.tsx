@@ -7,8 +7,11 @@ import EmployeeTable from './EmployeeTable';
 import Pagination from '@/components/shared/Pagination';
 import { useEmployees } from './hooks/useEmployees';
 import { useDeleteEmployee } from './hooks/useDeleteEmployee';
+import { useAuth } from '../auth/AuthProvider';
 
 export default function EmployeesPage() {
+  const { user } = useAuth();
+  const isUnauthorized = user?.role !== 'admin';
   const [searchTerm, setSearchTerm] = useState('');
   const [departmentId, setDepartmentId] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('All Statuses');
@@ -127,6 +130,7 @@ export default function EmployeesPage() {
           onEditEmployee={() => { }}
           onDeleteEmployee={handleDeleteEmployee}
           onDeleteSelected={handleDeleteSelected}
+          isUnauthorized={isUnauthorized}
         />
 
         <Pagination

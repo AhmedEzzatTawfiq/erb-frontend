@@ -2,7 +2,9 @@
 
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { ChevronRight, Pencil, MapPin, Phone, BadgeCheck, CheckCircle2, Briefcase, MessageSquare, Calendar } from 'lucide-react';
+import {
+  ChevronRight, Pencil, Mail, BadgeCheck, Briefcase, MessageSquare, Calendar, Shield
+} from 'lucide-react';
 import { useUser } from './hooks/useUser';
 import { useDeleteUserAvatar, useUploadUserAvatar } from './hooks/useUploadUserImage';
 import { useImageUpload } from '@/hooks/useImageUpload';
@@ -33,9 +35,7 @@ export default function UserProfilePage() {
   const isAvatarBusy =
     uploadAvatarMutation.isPending || deleteAvatarMutation.isPending;
 
-  const handleAvatarChange = (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => {
+  const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setFeedbackMessage(null);
     handleImageChange(event);
   };
@@ -44,22 +44,51 @@ export default function UserProfilePage() {
   const user = data ?? null;
 
   if (isLoading) {
-    return <div className="p-8 text-slate-500 font-medium">Loading user details...</div>;
+    return (
+      <main className="space-y-6 max-w-7xl mx-auto pb-10">
+        <div className="py-24 flex flex-col items-center gap-3 text-text-secondary">
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          <span className="text-sm font-medium">Loading user…</span>
+        </div>
+      </main>
+    );
   }
 
   if (isError || !user) {
-    return <div className="p-8 text-red-500 font-medium">User not found.</div>;
+    return (
+      <main className="space-y-6 max-w-7xl mx-auto pb-10">
+        <div className="py-24 text-center text-sm text-red-500 font-medium">
+          User not found or failed to load.
+        </div>
+      </main>
+    );
   }
 
-  return (
+  const joinedDate = user.created
+    ? new Date(user.created).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      })
+    : '—';
 
+  const roleConfig: Record<string, { bg: string; text: string }> = {
+    admin:    { bg: 'bg-purple-100', text: 'text-purple-700' },
+    manager:  { bg: 'bg-blue-100',   text: 'text-blue-700'   },
+    employee: { bg: 'bg-slate-100',  text: 'text-slate-700'  },
+  };
+  const roleStyle = roleConfig[user.role] ?? roleConfig.employee;
+
+  const statusConfig =
+    user.status === 'active'
+      ? { bg: 'bg-emerald-100', text: 'text-emerald-700', dot: 'bg-emerald-600' }
+      : { bg: 'bg-slate-100',   text: 'text-slate-600',   dot: 'bg-slate-400'   };
+
+  return (
     <main className="space-y-6 max-w-7xl mx-auto pb-10">
-      {/* Breadcrumb Navigation */}
+      {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-sm text-slate-500 font-medium">
-        <Link
-          href="/users"
-          className="hover:text-slate-800 transition-colors"
-        >
+        <Link href="/users" className="hover:text-slate-800 transition-colors">
           Users
         </Link>
         <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
@@ -81,12 +110,13 @@ export default function UserProfilePage() {
         </Link>
       </div>
 
-      {/* Main Grid Layout */}
+      {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left */}
         <div className="lg:col-span-1 space-y-6">
+          {/* Profile Card */}
           <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-2xs text-center flex flex-col items-center">
-            <div className="w-48h-48 rounded-full overflow-hidden mb-4 border-2 border-slate-100 shadow-xs relative group flex items-center justify-center bg-slate-100">
+            <div className="w-48 h-48 rounded-full overflow-hidden mb-4 border-2 border-slate-100 shadow-xs relative group flex items-center justify-center bg-slate-100">
               {avatarPreview ? (
                 <img
                   src={avatarPreview}
@@ -105,16 +135,18 @@ export default function UserProfilePage() {
             </div>
 
             <h2 className="text-lg font-bold text-slate-900">{user.name}</h2>
-            <p className="text-xs text-slate-500 font-medium mb-3">
-              {user.email}
-            </p>
+            <p className="text-xs text-slate-500 font-medium mb-3">{user.email}</p>
 
             <div className="flex items-center gap-2 justify-center mb-5">
-              <span className="bg-slate-100 text-slate-700 text-xs font-semibold px-2.5 py-1 rounded-md border border-slate-200">
+              <span
+                className={`${roleStyle.bg} ${roleStyle.text} text-xs font-semibold px-2.5 py-1 rounded-md border border-transparent capitalize`}
+              >
                 {user.role}
               </span>
-              <span className="bg-emerald-100 text-emerald-700 text-xs font-bold px-2.5 py-1 rounded-md flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+              <span
+                className={`${statusConfig.bg} ${statusConfig.text} text-xs font-bold px-2.5 py-1 rounded-md flex items-center gap-1 capitalize`}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${statusConfig.dot}`} />
                 {user.status}
               </span>
             </div>
@@ -127,30 +159,47 @@ export default function UserProfilePage() {
               <MessageSquare className="w-4 h-4" />
               <span>Message</span>
             </a>
+
+            {feedbackMessage && (
+              <p
+                className={`mt-3 text-xs font-medium ${
+                  feedbackMessage.type === 'success' ? 'text-emerald-600' : 'text-red-500'
+                }`}
+              >
+                {feedbackMessage.text}
+              </p>
+            )}
           </div>
 
+          {/* Information Panel */}
           <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-2xs space-y-4">
             <h3 className="text-base font-bold text-slate-900">Information</h3>
 
             <div className="space-y-3.5 text-xs">
               <div className="flex items-center justify-between py-1 border-b border-slate-100 pb-2.5">
                 <div className="flex items-center gap-2 text-slate-500 font-medium">
-                  <Briefcase className="w-4 h-4 text-slate-400 shrink-0" />
-                  <span>Role</span>
+                  <Mail className="w-4 h-4 text-slate-400 shrink-0" />
+                  <span>Email</span>
                 </div>
-                <span className="font-semibold text-slate-800">
-                  {user.role}
+                <span className="font-semibold text-slate-800 text-right max-w-40 truncate">
+                  {user.email}
                 </span>
               </div>
 
               <div className="flex items-center justify-between py-1 border-b border-slate-100 pb-2.5">
                 <div className="flex items-center gap-2 text-slate-500 font-medium">
-                  <Calendar className="w-4 h-4 text-slate-400 shrink-0" />
-                  <span>Created</span>
+                  <Briefcase className="w-4 h-4 text-slate-400 shrink-0" />
+                  <span>Role</span>
                 </div>
-                <span className="font-semibold text-slate-800">
-                  {user.created ? new Date(user.created).toLocaleDateString() : 'N/A'}
-                </span>
+                <span className="font-semibold text-slate-800 capitalize">{user.role}</span>
+              </div>
+
+              <div className="flex items-center justify-between py-1 border-b border-slate-100 pb-2.5">
+                <div className="flex items-center gap-2 text-slate-500 font-medium">
+                  <Calendar className="w-4 h-4 text-slate-400 shrink-0" />
+                  <span>Joined</span>
+                </div>
+                <span className="font-semibold text-slate-800">{joinedDate}</span>
               </div>
 
               <div className="flex items-center justify-between py-1">
@@ -158,8 +207,11 @@ export default function UserProfilePage() {
                   <BadgeCheck className="w-4 h-4 text-slate-400 shrink-0" />
                   <span>User ID</span>
                 </div>
-                <span className="font-semibold text-slate-800">
-                  {user.id.slice(0, 8)}
+                <span
+                  className="font-mono font-semibold text-slate-800 text-right max-w-28 truncate"
+                  title={user.id}
+                >
+                  {user.id.slice(0, 8)}…
                 </span>
               </div>
             </div>
@@ -168,163 +220,92 @@ export default function UserProfilePage() {
 
         {/* Right */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-white border border-slate-200 rounded-xl p-5 shadow-2xs">
+          {/* Summary Bar */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 bg-white border border-slate-200 rounded-xl p-5 shadow-2xs">
+            <div>
+              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
+                Role
+              </span>
+              <span className="text-sm font-bold text-slate-900 mt-1 block capitalize">
+                {user.role}
+              </span>
+            </div>
+
+            <div>
+              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
+                Status
+              </span>
+              <span
+                className={`text-sm font-bold mt-1 block capitalize ${statusConfig.text}`}
+              >
+                {user.status}
+              </span>
+            </div>
+
             <div>
               <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
                 Joined Date
               </span>
               <span className="text-sm font-bold text-slate-900 mt-1 block">
-                {user.created ? new Date(user.created).toLocaleDateString() : 'N/A'}
+                {joinedDate}
               </span>
             </div>
+          </div>
 
-            <div>
-              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
-                Last Login
-              </span>
-              <span className="text-sm font-bold text-slate-900 mt-1 block">
-                2 hours ago
-              </span>
-            </div>
-
-            <div>
-              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
-                Projects
-              </span>
-              <span className="text-sm font-bold text-slate-900 mt-1 block">
-                14 Active
-              </span>
-            </div>
-
-            <div>
-              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
-                Reports To
-              </span>
-              <div className="flex items-center gap-2 mt-1">
-                <div className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-bold flex items-center justify-center shrink-0">
-                  RF
-                </div>
-                <span className="text-sm font-bold text-slate-900">
-                  R. Fox
+          {/* Quick Info */}
+          <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-2xs space-y-3">
+            <h3 className="text-base font-bold text-slate-900 mb-1">Quick Info</h3>
+            <div className="divide-y divide-slate-100 text-xs">
+              <div className="flex justify-between py-2.5">
+                <span className="text-slate-500">User ID</span>
+                <span
+                  className="font-mono font-semibold text-slate-700 text-right max-w-32 truncate"
+                  title={user.id}
+                >
+                  {user.id.slice(0, 8)}…
                 </span>
               </div>
-            </div>
-          </div>
-
-          <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-2xs space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-base font-bold text-slate-900">
-                System Permissions
-              </h3>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
-              <div className="p-3.5 bg-slate-50/70 border border-slate-100 rounded-lg flex items-start gap-3">
-                <CheckCircle2 className="w-5 h-5 text-emerald-600 mt-0.5 shrink-0" />
-                <div>
-                  <h4 className="text-xs font-bold text-slate-900">
-                    Financial Records
-                  </h4>
-                  <p className="text-[11px] text-slate-500 mt-0.5 font-normal">
-                    View and approve
-                  </p>
-                </div>
+              <div className="flex justify-between py-2.5">
+                <span className="text-slate-500">Email</span>
+                <span className="font-semibold text-slate-700 text-right max-w-48 truncate">
+                  {user.email}
+                </span>
               </div>
-
-              <div className="p-3.5 bg-slate-50/70 border border-slate-100 rounded-lg flex items-start gap-3">
-                <CheckCircle2 className="w-5 h-5 text-emerald-600 mt-0.5 shrink-0" />
-                <div>
-                  <h4 className="text-xs font-bold text-slate-900">
-                    User Management
-                  </h4>
-                  <p className="text-[11px] text-slate-500 mt-0.5 font-normal">
-                    Create and edit users
-                  </p>
-                </div>
+              <div className="flex justify-between py-2.5">
+                <span className="text-slate-500">Role</span>
+                <span className="font-semibold text-slate-700 capitalize">{user.role}</span>
               </div>
-
-              <div className="p-3.5 bg-slate-50/70 border border-slate-100 rounded-lg flex items-start gap-3">
-                <CheckCircle2 className="w-5 h-5 text-emerald-600 mt-0.5 shrink-0" />
-                <div>
-                  <h4 className="text-xs font-bold text-slate-900">
-                    Inventory Control
-                  </h4>
-                  <p className="text-[11px] text-slate-500 mt-0.5 font-normal">
-                    Full access
-                  </p>
-                </div>
+              <div className="flex justify-between py-2.5">
+                <span className="text-slate-500">Status</span>
+                <span
+                  className={`font-semibold capitalize ${
+                    user.status === 'active' ? 'text-emerald-600' : 'text-slate-500'
+                  }`}
+                >
+                  {user.status}
+                </span>
               </div>
-
-              <div className="p-3.5 bg-slate-50/70 border border-slate-100 rounded-lg flex items-start gap-3">
-                <CheckCircle2 className="w-5 h-5 text-emerald-600 mt-0.5 shrink-0" />
-                <div>
-                  <h4 className="text-xs font-bold text-slate-900">
-                    System Settings
-                  </h4>
-                  <p className="text-[11px] text-slate-500 mt-0.5 font-normal">
-                    Global config
-                  </p>
-                </div>
+              <div className="flex justify-between py-2.5">
+                <span className="text-slate-500">Member Since</span>
+                <span className="font-semibold text-slate-700">{joinedDate}</span>
               </div>
             </div>
           </div>
 
-          {/* Recent Activity Card */}
+          {/* Permissions placeholder — role-derived, no static content */}
           <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-2xs space-y-4">
-            <h3 className="text-base font-bold text-slate-900">
-              Recent Activity
-            </h3>
+            <h3 className="text-base font-bold text-slate-900">System Access</h3>
 
-            <div className="relative pl-6 space-y-5 before:absolute before:left-2 before:top-2 before:bottom-2
-             before:w-0.5 before:bg-slate-100">
-              <div className="relative">
-                <div className="w-2.5 h-2.5 rounded-full bg-blue-600 absolute -left-5.75 top-1 border-2 border-white" />
-                <h4 className="text-xs font-semibold text-slate-900">
-                  Approved Invoice #INV-2023-892
-                </h4>
-                <p className="text-[11px] text-slate-400 mt-0.5">
-                  Today, 10:42 AM
+            <div className="flex flex-col items-center gap-3 py-8 text-slate-400">
+              <Shield className="w-8 h-8" />
+              <div className="text-center">
+                <p className="text-sm font-semibold text-slate-700 capitalize">
+                  {user.role} Access Level
+                </p>
+                <p className="text-xs text-slate-400 mt-1">
+                  Detailed permission management will be available here.
                 </p>
               </div>
-
-              <div className="relative">
-                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 absolute -left-5.75 top-1 border-2 border-white" />
-                <h4 className="text-xs font-semibold text-slate-900">
-                  Updated project status for Q4 Marketing Launch
-                </h4>
-                <p className="text-[11px] text-slate-400 mt-0.5">
-                  Yesterday, 2:15 PM
-                </p>
-              </div>
-
-              <div className="relative">
-                <div className="w-2.5 h-2.5 rounded-full bg-purple-500 absolute -left-5.75 top-1 border-2 border-white" />
-                <h4 className="text-xs font-semibold text-slate-900">
-                  Logged in from new device Mac OS
-                </h4>
-                <p className="text-[11px] text-slate-400 mt-0.5">
-                  Oct 24, 09:00 AM
-                </p>
-              </div>
-
-              <div className="relative">
-                <div className="w-2.5 h-2.5 rounded-full bg-amber-500 absolute -left-5.75 top-1 border-2 border-white" />
-                <h4 className="text-xs font-semibold text-slate-900">
-                  Completed mandatory compliance training
-                </h4>
-                <p className="text-[11px] text-slate-400 mt-0.5">
-                  Oct 20, 11:30 AM
-                </p>
-              </div>
-            </div>
-
-            <div className="pt-2 border-t border-slate-100 text-center">
-              {/* <button
-                type="button"
-                className="text-xs font-semibold text-[#2563EB] hover:text-[#1D4ED8] transition-colors cursor-pointer"
-              >
-                View Full History
-              </button> */}
             </div>
           </div>
         </div>

@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import {
-  ChevronRight, Pencil, Mail, MapPin, Phone, Globe, Calendar, ArrowUpRight
+  ChevronRight, Pencil, Mail, MapPin, Phone, Globe, Calendar, ShoppingCart, Building2
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { useCustomer } from './hooks/useCustomer';
@@ -39,33 +39,23 @@ export default function CustomerProfilePage() {
   const isAvatarBusy =
     uploadAvatarMutation.isPending || deleteAvatarMutation.isPending;
 
-  const handleAvatarChange = (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => {
+  const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setFeedbackMessage(null);
     handleImageChange(event);
   };
 
   const handleUploadAvatar = () => {
     if (!selectedFile || !id || isAvatarBusy) return;
-
     setFeedbackMessage(null);
-
     uploadAvatarMutation.mutate(
       { customerId: id, file: selectedFile },
       {
         onSuccess: () => {
           handleRemovePhoto();
-          setFeedbackMessage({
-            type: 'success',
-            text: 'Avatar updated successfully!',
-          });
+          setFeedbackMessage({ type: 'success', text: 'Avatar updated successfully!' });
         },
         onError: () => {
-          setFeedbackMessage({
-            type: 'error',
-            text: 'Failed to upload customer avatar.',
-          });
+          setFeedbackMessage({ type: 'error', text: 'Failed to upload customer avatar.' });
         },
       },
     );
@@ -73,65 +63,78 @@ export default function CustomerProfilePage() {
 
   const handleDeleteAvatar = () => {
     if (!id || isAvatarBusy) return;
-
     setFeedbackMessage(null);
-
     deleteAvatarMutation.mutate(id, {
       onSuccess: () => {
         handleRemovePhoto();
-        setFeedbackMessage({
-          type: 'success',
-          text: 'Avatar removed successfully!',
-        });
+        setFeedbackMessage({ type: 'success', text: 'Avatar removed successfully!' });
       },
       onError: () => {
-        setFeedbackMessage({
-          type: 'error',
-          text: 'Failed to remove employee avatar.',
-        });
+        setFeedbackMessage({ type: 'error', text: 'Failed to remove customer avatar.' });
       },
     });
   };
 
-
   if (isLoading) {
-    return <div>Loading customer...</div>;
+    return (
+      <main className="space-y-6 max-w-7xl mx-auto pb-10">
+        <div className="py-24 flex flex-col items-center gap-3 text-text-secondary">
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          <span className="text-sm font-medium">Loading customer…</span>
+        </div>
+      </main>
+    );
   }
 
   if (isError || !customer) {
-    return <div>Customer not found.</div>;
+    return (
+      <main className="space-y-6 max-w-7xl mx-auto pb-10">
+        <div className="py-24 text-center text-sm text-red-500 font-medium">
+          Customer not found or failed to load.
+        </div>
+      </main>
+    );
   }
 
+  const avgOrderValue =
+    customer.orders > 0 ? customer.totalSpent / customer.orders : 0;
 
+  const joinedDate = customer.createdAt
+    ? new Date(customer.createdAt).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      })
+    : '—';
 
-
+  const statusConfig =
+    customer.status === 'active'
+      ? { bg: 'bg-emerald-100', text: 'text-emerald-700', dot: 'bg-emerald-600' }
+      : { bg: 'bg-slate-100', text: 'text-slate-600', dot: 'bg-slate-400' };
 
   return (
     <main className="space-y-6 max-w-7xl mx-auto pb-10">
-      {/* Breadcrumb Navigation */}
+      {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-sm text-slate-500 font-medium">
-        <Link
-          href="/customers"
-          className="hover:text-slate-800 transition-colors"
-        >
+        <Link href="/customers" className="hover:text-slate-800 transition-colors">
           Customers
         </Link>
         <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
-        <span className="text-slate-700 font-semibold">{customer?.companyName}</span>
+        <span className="text-slate-700 font-semibold">{customer.companyName}</span>
       </nav>
 
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
-            {customer?.companyName}
+            {customer.companyName}
           </h1>
           <p className="text-sm text-slate-500 font-normal mt-1">
-            Customer Profile & Account History
+            Customer Profile &amp; Account History
           </p>
         </div>
         <Link
-          href={`/customers/${customer?.id}/edit`}
+          href={`/customers/${customer.id}/edit`}
           className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-sm font-semibold px-4 py-2.5 rounded-lg shadow-2xs transition-colors cursor-pointer flex items-center gap-2 self-start sm:self-auto"
         >
           <Pencil className="w-4 h-4 text-slate-500" />
@@ -139,12 +142,13 @@ export default function CustomerProfilePage() {
         </Link>
       </div>
 
-      {/* Main page */}
+      {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column */}
         <div className="lg:col-span-1 space-y-6">
           {/* Profile Card */}
           <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-2xs text-center flex flex-col items-center">
-            <div className="w-48h-48 rounded-full overflow-hidden mb-4 border-2 border-slate-100 shadow-xs relative group flex items-center justify-center bg-slate-100">
+            <div className="w-48 h-48 rounded-full overflow-hidden mb-4 border-2 border-slate-100 shadow-xs relative group flex items-center justify-center bg-slate-100">
               {avatarPreview ? (
                 <img
                   src={avatarPreview}
@@ -162,73 +166,104 @@ export default function CustomerProfilePage() {
               )}
             </div>
 
-            <h2 className="text-lg font-bold text-slate-900">{customer?.companyName}</h2>
+            <h2 className="text-lg font-bold text-slate-900">{customer.companyName}</h2>
             <p className="text-xs text-slate-500 font-medium mb-3">
-              Primary Contact: <span className="text-slate-800 font-semibold">{customer?.contactName}</span>
+              Primary Contact:{' '}
+              <span className="text-slate-800 font-semibold">{customer.contactName}</span>
             </p>
 
             <div className="flex items-center gap-2 justify-center mb-5">
-              <span className="bg-slate-100 text-slate-700 text-xs font-semibold px-2.5 py-1 rounded-md border border-slate-200">
-                Enterprise Account
-              </span>
-              <span className="bg-emerald-100 text-emerald-700 text-xs font-bold px-2.5 py-1 rounded-md flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
-                {customer.status}
+              {customer.taxId && (
+                <span className="bg-slate-100 text-slate-700 text-xs font-semibold px-2.5 py-1 rounded-md border border-slate-200 flex items-center gap-1">
+                  <Building2 className="w-3 h-3" />
+                  {customer.taxId}
+                </span>
+              )}
+              <span
+                className={`${statusConfig.bg} ${statusConfig.text} text-xs font-bold px-2.5 py-1 rounded-md flex items-center gap-1`}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${statusConfig.dot}`} />
+                {customer.status ?? 'active'}
               </span>
             </div>
 
-            <a
-              href={`mailto:${customer.email}`}
-              className="w-full bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-sm font-medium py-2.5 rounded-lg shadow-xs hover:shadow transition-all flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <Mail className="w-4 h-4" />
-              <span>Send Email</span>
-            </a>
+            {customer.email && (
+              <a
+                href={`mailto:${customer.email}`}
+                className="w-full bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-sm font-medium py-2.5 rounded-lg shadow-xs hover:shadow transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Mail className="w-4 h-4" />
+                <span>Send Email</span>
+              </a>
+            )}
+
+            {/* Avatar feedback */}
+            {feedbackMessage && (
+              <p
+                className={`mt-3 text-xs font-medium ${
+                  feedbackMessage.type === 'success' ? 'text-emerald-600' : 'text-red-500'
+                }`}
+              >
+                {feedbackMessage.text}
+              </p>
+            )}
           </div>
 
-          {/* Quick Info */}
+          {/* Account Information */}
           <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-2xs space-y-4">
             <h3 className="text-base font-bold text-slate-900">Account Information</h3>
 
             <div className="space-y-3.5 text-xs">
-              <div className="flex items-center justify-between py-1 border-b border-slate-100 pb-2.5">
-                <div className="flex items-center gap-2 text-slate-500 font-medium">
-                  <Mail className="w-4 h-4 text-slate-400 shrink-0" />
-                  <span>Email</span>
+              {customer.email && (
+                <div className="flex items-center justify-between py-1 border-b border-slate-100 pb-2.5">
+                  <div className="flex items-center gap-2 text-slate-500 font-medium">
+                    <Mail className="w-4 h-4 text-slate-400 shrink-0" />
+                    <span>Email</span>
+                  </div>
+                  <span className="font-semibold text-slate-800 text-right max-w-40 truncate">
+                    {customer.email}
+                  </span>
                 </div>
-                <span className="font-semibold text-slate-800">{customer.email}</span>
-              </div>
+              )}
 
-              <div className="flex items-center justify-between py-1 border-b border-slate-100 pb-2.5">
-                <div className="flex items-center gap-2 text-slate-500 font-medium">
-                  <Phone className="w-4 h-4 text-slate-400 shrink-0" />
-                  <span>Phone</span>
+              {customer.phone && (
+                <div className="flex items-center justify-between py-1 border-b border-slate-100 pb-2.5">
+                  <div className="flex items-center gap-2 text-slate-500 font-medium">
+                    <Phone className="w-4 h-4 text-slate-400 shrink-0" />
+                    <span>Phone</span>
+                  </div>
+                  <span className="font-semibold text-slate-800">{customer.phone}</span>
                 </div>
-                <span className="font-semibold text-slate-800">{customer.phone}</span>
-              </div>
+              )}
 
-              <div className="flex items-center justify-between py-1 border-b border-slate-100 pb-2.5">
-                <div className="flex items-center gap-2 text-slate-500 font-medium">
-                  <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
-                  <span>Address</span>
+              {(customer.address || customer.city) && (
+                <div className="flex items-center justify-between py-1 border-b border-slate-100 pb-2.5">
+                  <div className="flex items-center gap-2 text-slate-500 font-medium">
+                    <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
+                    <span>Address</span>
+                  </div>
+                  <span className="font-semibold text-slate-800 text-right max-w-40">
+                    {[customer.address, customer.city].filter(Boolean).join(', ')}
+                  </span>
                 </div>
-                <span className="font-semibold text-slate-800">100 Corporate Blvd, NY</span>
-              </div>
+              )}
 
-              <div className="flex items-center justify-between py-1 border-b border-slate-100 pb-2.5">
-                <div className="flex items-center gap-2 text-slate-500 font-medium">
-                  <Globe className="w-4 h-4 text-slate-400 shrink-0" />
-                  <span>Country</span>
+              {customer.country && (
+                <div className="flex items-center justify-between py-1 border-b border-slate-100 pb-2.5">
+                  <div className="flex items-center gap-2 text-slate-500 font-medium">
+                    <Globe className="w-4 h-4 text-slate-400 shrink-0" />
+                    <span>Country</span>
+                  </div>
+                  <span className="font-semibold text-slate-800">{customer.country}</span>
                 </div>
-                <span className="font-semibold text-slate-800">{customer.country}</span>
-              </div>
+              )}
 
               <div className="flex items-center justify-between py-1">
                 <div className="flex items-center gap-2 text-slate-500 font-medium">
                   <Calendar className="w-4 h-4 text-slate-400 shrink-0" />
-                  <span>Joined Date</span>
+                  <span>Joined</span>
                 </div>
-                <span className="font-semibold text-slate-800">{customer.createdAt}</span>
+                <span className="font-semibold text-slate-800">{joinedDate}</span>
               </div>
             </div>
           </div>
@@ -236,7 +271,8 @@ export default function CustomerProfilePage() {
 
         {/* Right Column */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-white border border-slate-200 rounded-xl p-5 shadow-2xs">
+          {/* Stats Bar */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 bg-white border border-slate-200 rounded-xl p-5 shadow-2xs">
             <div>
               <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
                 Total Revenue
@@ -251,7 +287,7 @@ export default function CustomerProfilePage() {
                 Total Orders
               </span>
               <span className="text-base sm:text-lg font-bold text-slate-900 mt-1 block">
-                {customer.orders} Orders
+                {customer.orders} {customer.orders === 1 ? 'Order' : 'Orders'}
               </span>
             </div>
 
@@ -260,21 +296,12 @@ export default function CustomerProfilePage() {
                 Avg Order Value
               </span>
               <span className="text-base sm:text-lg font-bold text-slate-900 mt-1 block">
-                {formatCurrency(customer.totalSpent / (customer.orders || 1))}
-              </span>
-            </div>
-
-            <div>
-              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
-                Payment Terms
-              </span>
-              <span className="text-base sm:text-lg font-bold text-blue-600 mt-1 block">
-                Net 30
+                {customer.orders > 0 ? formatCurrency(avgOrderValue) : '—'}
               </span>
             </div>
           </div>
 
-          {/* Customer Recent Orders */}
+          {/* Recent Orders  */}
           <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-2xs space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-base font-bold text-slate-900">Recent Customer Orders</h3>
@@ -283,86 +310,56 @@ export default function CustomerProfilePage() {
                 className="text-xs font-semibold text-[#2563EB] hover:underline flex items-center gap-1"
               >
                 <span>View All Orders</span>
-                <ArrowUpRight className="w-3.5 h-3.5" />
               </Link>
             </div>
 
-            <div className="divide-y divide-slate-100 text-xs">
-              <div className="grid grid-cols-4 pb-2.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                <span>ORDER REF</span>
-                <span>DATE</span>
-                <span>STATUS</span>
-                <span className="text-right">TOTAL</span>
+            {customer.orders === 0 ? (
+              <div className="py-10 flex flex-col items-center gap-2 text-slate-400">
+                <ShoppingCart className="w-8 h-8" />
+                <p className="text-sm font-medium">No orders yet</p>
               </div>
-
-              <div className="grid grid-cols-4 py-3 items-center">
-                <Link href="/orders/ord-1" className="font-bold text-blue-600 hover:underline">
-                  #ORD-7829
-                </Link>
-                <span className="text-slate-500">Oct 24, 2024</span>
-                <div>
-                  <span className="bg-blue-50 text-blue-700 text-[11px] font-semibold px-2 py-0.5 rounded">
-                    Processing
-                  </span>
-                </div>
-                <span className="font-bold text-slate-900 text-right">{formatCurrency(1249.99)}</span>
+            ) : (
+              <div className="py-6 flex flex-col items-center gap-2 text-slate-400">
+                <ShoppingCart className="w-7 h-7" />
+                <p className="text-sm font-medium text-slate-500">
+                  {customer.orders} order{customer.orders !== 1 ? 's' : ''} placed
+                </p>
               </div>
-
-              <div className="grid grid-cols-4 py-3 items-center">
-                <Link href="/orders/ord-2" className="font-bold text-blue-600 hover:underline">
-                  #ORD-7828
-                </Link>
-                <span className="text-slate-500">Oct 18, 2024</span>
-                <div>
-                  <span className="bg-emerald-50 text-emerald-700 text-[11px] font-semibold px-2 py-0.5 rounded">
-                    Delivered
-                  </span>
-                </div>
-                <span className="font-bold text-slate-900 text-right">{formatCurrency(3450.00)}</span>
-              </div>
-
-              <div className="grid grid-cols-4 py-3 items-center">
-                <Link href="/orders/ord-3" className="font-bold text-blue-600 hover:underline">
-                  #ORD-7825
-                </Link>
-                <span className="text-slate-500">Sep 30, 2024</span>
-                <div>
-                  <span className="bg-emerald-50 text-emerald-700 text-[11px] font-semibold px-2 py-0.5 rounded">
-                    Delivered
-                  </span>
-                </div>
-                <span className="font-bold text-slate-900 text-right">{formatCurrency(890.50)}</span>
-              </div>
-            </div>
+            )}
           </div>
 
-          {/* Activity */}
-          <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-2xs space-y-4">
-            <h3 className="text-base font-bold text-slate-900">Activity Log</h3>
-
-            <div className="relative pl-6 space-y-4 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-100">
-              <div className="relative">
-                <div className="w-2.5 h-2.5 rounded-full bg-blue-600 absolute -left-5.75 top-1 border-2 border-white" />
-                <h4 className="text-xs font-semibold text-slate-900">
-                  New Order #ORD-7829 placed
-                </h4>
-                <p className="text-[11px] text-slate-400 mt-0.5">Oct 24, 2024 at 10:30 AM</p>
+          {/* Quick Info */}
+          <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-2xs space-y-3">
+            <h3 className="text-base font-bold text-slate-900 mb-1">Quick Info</h3>
+            <div className="divide-y divide-slate-100 text-xs">
+              <div className="flex justify-between py-2.5">
+                <span className="text-slate-500">Customer ID</span>
+                <span
+                  className="font-mono font-semibold text-slate-700 text-right max-w-32 truncate"
+                  title={customer.id}
+                >
+                  {customer.id.slice(0, 8)}…
+                </span>
               </div>
-
-              <div className="relative">
-                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 absolute -left-5.75 top-1 border-2 border-white" />
-                <h4 className="text-xs font-semibold text-slate-900">
-                  Payment for Invoice #INV-2024-001 completed
-                </h4>
-                <p className="text-[11px] text-slate-400 mt-0.5">Oct 15, 2024 at 02:15 PM</p>
+              {customer.taxId && (
+                <div className="flex justify-between py-2.5">
+                  <span className="text-slate-500">Tax ID</span>
+                  <span className="font-mono font-semibold text-slate-700">{customer.taxId}</span>
+                </div>
+              )}
+              <div className="flex justify-between py-2.5">
+                <span className="text-slate-500">Status</span>
+                <span
+                  className={`font-semibold capitalize ${
+                    customer.status === 'active' ? 'text-emerald-600' : 'text-slate-500'
+                  }`}
+                >
+                  {customer.status ?? 'active'}
+                </span>
               </div>
-
-              <div className="relative">
-                <div className="w-2.5 h-2.5 rounded-full bg-purple-500 absolute -left-5.75 top-1 border-2 border-white" />
-                <h4 className="text-xs font-semibold text-slate-900">
-                  Account details updated by Support Team
-                </h4>
-                <p className="text-[11px] text-slate-400 mt-0.5">Sep 12, 2024 at 11:00 AM</p>
+              <div className="flex justify-between py-2.5">
+                <span className="text-slate-500">Member Since</span>
+                <span className="font-semibold text-slate-700">{joinedDate}</span>
               </div>
             </div>
           </div>

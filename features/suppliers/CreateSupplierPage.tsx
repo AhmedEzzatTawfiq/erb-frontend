@@ -155,6 +155,7 @@ export default function CreateSupplierPage() {
                   <div className="flex gap-2">
                     <input
                       type="text"
+                      required
                       value={newCategoryName}
                       onChange={(e) => setNewCategoryName(e.target.value)}
                       placeholder="Category name..."
@@ -182,7 +183,7 @@ export default function CreateSupplierPage() {
                     >
                       {categoriesLoading && <option value="">Loading categories...</option>}
                       {!categoriesLoading && categories.length === 0 && (
-                        <option value="">No categories found. Click 'New Category' above.</option>
+                        <option value="">No categories</option>
                       )}
                       {categories.map((cat) => (
                         <option key={cat.id} value={cat.id}>
@@ -208,7 +209,7 @@ export default function CreateSupplierPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, address: e.target.value })
                   }
-                  placeholder="e.g. 123 Industrial Park, Cairo"
+                  placeholder="123 Main St"
                   className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm
                    text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
                 />
@@ -271,7 +272,7 @@ export default function CreateSupplierPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, phone: e.target.value })
                     }
-                    placeholder="+1 (555) 000-0000"
+                    placeholder="+20"
                     className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm
                      text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
                   />
